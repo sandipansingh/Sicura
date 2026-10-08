@@ -8,6 +8,7 @@ export default ts.config(
       '**/.next/**',
       '.local/**',
       'packages/contracts/src/generated.ts',
+      'packages/core/src/intake/vendor/**',
     ],
   },
   js.configs.recommended,

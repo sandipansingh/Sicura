@@ -1,0 +1,11 @@
+{
+  "upstream": "https://github.com/pganalyze/libpg_query",
+  "tag": "17-6.2.0",
+  "commit": "a192b386c10c148264ad287b5d16fd6591487a23",
+  "postgres_parser_version": "17.7",
+  "compiler_image": "emscripten/emsdk@sha256:af45409f3199d88db4b1b03af0098532c8fb33a375ac257463eeb0a622870d06",
+  "artifacts": {
+    "pg-query.mjs": "25b67682d23c4552e34ec4c247049305417d600856e23f6756307746a6600869",
+    "pg-query.wasm": "a0ab41609e94434390ba86e521f5ace2e24ce42d3b9f3ccb1395667fc1bf2b37"
+  }
+}

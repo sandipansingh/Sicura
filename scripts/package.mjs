@@ -26,6 +26,14 @@ await cp('apps/web/package.json', resolve(stage, 'runtime/web/package.json'));
 await cp('apps/web/next.config.mjs', resolve(stage, 'runtime/web/next.config.mjs'));
 for (const path of [
   'packages/core/src/intake/sql-parser.mjs',
+  'packages/core/src/intake/repository-validator.mjs',
+  'packages/core/src/intake/sql-node-fields.json',
+  'packages/core/src/intake/pl-node-fields.json',
+  'packages/core/src/intake/postgres-builtin-names.json',
+  'packages/core/src/intake/vendor/pg-query.mjs',
+  'packages/core/src/intake/vendor/pg-query.wasm',
+  'config/sql-parser-lock.json',
+  'licenses/libpg-query-LICENSE',
   'config/runtime-lock.json',
   'config/ollama/model-lock.json',
   'config/fonts-lock.json',

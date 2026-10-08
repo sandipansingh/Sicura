@@ -31,7 +31,7 @@ export function assertRepositoryFixture(id: RepositoryFixture, store: Store, job
   assert.equal(JSON.stringify(inputs).includes(repositorySentinel), false);
   if (id === 'unsupported-chain') {
     assert.equal(report.rls.status, 'unsupported_sql');
-    assert.equal(report.rls.reason_code, 'SQL_UNSUPPORTED');
+    assert.equal(report.rls.reason_code, 'SQL_CALL_UNSUPPORTED');
     assert.ok(report.credential_findings > 0);
     assert.deepEqual(report.sql_order, [
       'supabase/migrations/1_schema.sql',

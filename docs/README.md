@@ -21,3 +21,7 @@ D-30 defines the regular release interface: four project-workflow tabs, no demo/
 ## Project analysis release (D-31)
 
 Sicura 0.3.0 separates static SQL declarations, Gemma project advice and observed replica evidence. Complex migrations remain inspectable when replay is unsupported. Project shows a compact overview, statement diagnostics and an automatic Gemma summary; repository rescans reuse the original source. The execution allowlist remains unchanged. See the owner documents below for contracts, privacy and limitations.
+
+## Supabase database replay release (D-32)
+
+Sicura 0.4.0 adds bounded repository-v3 replay, compatible database helpers, restricted routine execution and dependency-aware synthetic seeds. Imported routines remain transient; only replay identities and normalized metadata are retained. Rescan repository upgrades a saved import. Actual catalogue and scenario coverage remain separate from static declarations and Gemma advice.

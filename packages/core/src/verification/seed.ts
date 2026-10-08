@@ -8,7 +8,7 @@ export const USER_IDS = {
   user_a: '00000000-0000-4000-8000-000000000001',
   user_b: '00000000-0000-4000-8000-000000000002',
 };
-export type Row = Record<string, string | number | boolean | null>;
+export type Row = Record<string, string | number | boolean | null | string[]>;
 export interface SeedTable {
   table: Table;
   key: string;
@@ -20,6 +20,8 @@ export interface SeedPlan {
   digest: string;
   tables: SeedTable[];
   unsupported: Record<string, string>;
+  repository?: boolean;
+  all_tables?: Table[];
 }
 export function planSeeds(snapshot: SchemaSnapshot): SeedPlan {
   const tables: SeedTable[] = [];
@@ -100,24 +102,97 @@ export async function insertRow(replica: Replica, table: Table, row: Row): Promi
     names.map((k) => row[k]),
   );
 }
-export async function restoreSeeds(replica: Replica, plan: SeedPlan): Promise<void> {
+export async function restoreSeeds(
+  replica: Replica,
+  plan: SeedPlan,
+  target?: SeedTable,
+): Promise<void> {
   await replica.setup.query('BEGIN');
   try {
+    if (plan.repository) await replica.setup.query('SET LOCAL ROLE harness_seed');
     if (plan.tables.length)
       await replica.setup.query(
-        `TRUNCATE ${plan.tables.map((t) => tableSql(t.table)).join(',')} RESTART IDENTITY`,
+        `TRUNCATE ${(plan.all_tables ?? plan.tables.map((t) => t.table)).map(tableSql).join(',')}${plan.repository ? ', auth.users' : ''} RESTART IDENTITY`,
       );
-    await replica.setup.query('INSERT INTO auth.users(id) VALUES($1),($2) ON CONFLICT DO NOTHING', [
-      USER_IDS.user_a,
-      USER_IDS.user_b,
-    ]);
-    for (const item of plan.tables) {
+    if (plan.repository) {
+      await replica.setup.query(
+        'INSERT INTO auth.users(id,email,raw_user_meta_data) VALUES($1,$2,$3::jsonb),($4,$5,$6::jsonb) ON CONFLICT DO NOTHING',
+        [
+          USER_IDS.user_a,
+          'synthetic-a@example.invalid',
+          JSON.stringify({ full_name: 'Synthetic A', name: 'Synthetic A' }),
+          USER_IDS.user_b,
+          'synthetic-b@example.invalid',
+          JSON.stringify({ full_name: 'Synthetic B', name: 'Synthetic B' }),
+        ],
+      );
+    } else
+      await replica.setup.query(
+        'INSERT INTO auth.users(id) VALUES($1),($2) ON CONFLICT DO NOTHING',
+        [USER_IDS.user_a, USER_IDS.user_b],
+      );
+    const needed = new Set<SeedTable>();
+    const collect = (item: SeedTable) => {
+      if (needed.has(item)) return;
+      needed.add(item);
+      for (const fk of item.table.foreign_keys ?? []) {
+        if (!fk.columns.some((c) => item.rows.user_a[c] != null)) continue;
+        const dependency = plan.tables.find(
+          (t) => t.table.schema === fk.schema && t.table.name === fk.table,
+        );
+        if (dependency) collect(dependency);
+      }
+    };
+    if (plan.repository && target) collect(target);
+    else plan.tables.forEach((t) => needed.add(t));
+    for (const item of plan.tables.filter((t) => needed.has(t))) {
+      if (plan.repository) {
+        for (const actor of ['user_a', 'user_b'] as const) {
+          const row = item.rows[actor],
+            names = Object.keys(row),
+            key = quoteIdentifier(item.key);
+          await replica.setup.query(
+            `INSERT INTO ${tableSql(item.table)} (${names.map(quoteIdentifier).join(',')}) VALUES (${names.map((_, i) => '$' + (i + 1)).join(',')}) ON CONFLICT (${key}) DO UPDATE SET ${
+              names
+                .filter((n) => n !== item.key)
+                .map((n) => `${quoteIdentifier(n)}=EXCLUDED.${quoteIdentifier(n)}`)
+                .join(',') || `${key}=EXCLUDED.${key}`
+            }`,
+            names.map((n) => row[n]),
+          );
+        }
+        continue;
+      }
       await insertRow(replica, item.table, item.rows.user_a);
       await insertRow(replica, item.table, item.rows.user_b);
     }
     await replica.setup.query('COMMIT');
-  } catch {
+  } catch (e) {
     await replica.setup.query('ROLLBACK');
-    throw new AppError('SEED_CONSTRAINT_FAILED');
+    const sqlstate =
+      e &&
+      typeof e === 'object' &&
+      'code' in e &&
+      typeof e.code === 'string' &&
+      /^[A-Z0-9]{5}$/.test(e.code)
+        ? e.code
+        : 'unknown';
+    const decoder =
+      e &&
+      typeof e === 'object' &&
+      'routine' in e &&
+      typeof e.routine === 'string' &&
+      [
+        'uuid_in',
+        'jsonb_in',
+        'json_in',
+        'pg_strtoint32_safe',
+        'boolin',
+        'numeric_in',
+        'array_in',
+      ].includes(e.routine)
+        ? e.routine
+        : 'other';
+    throw new AppError('SEED_CONSTRAINT_FAILED', 422, { sqlstate, decoder });
   }
 }

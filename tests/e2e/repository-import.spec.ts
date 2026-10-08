@@ -13,11 +13,14 @@ test('dashboard URL import persists redacted credential work and explicit unsupp
   await expect(
     page
       .getByText('Add a project', { exact: true })
-      .or(page.getByText('Import another project or analyze replacement files', { exact: true })),
+      .or(page.getByText('Import another project or analyze replacement files', { exact: true }))
+      .or(page.getByText('Import another repository', { exact: true })),
   ).toBeVisible();
-  const intake = page.getByText('Import another project or analyze replacement files', {
-    exact: true,
-  });
+  const intake = page
+    .getByText('Import another project or analyze replacement files', {
+      exact: true,
+    })
+    .or(page.getByText('Import another repository', { exact: true }));
   if (await intake.isVisible()) await intake.click();
   await page
     .getByLabel('GitHub repository URL')
@@ -25,7 +28,7 @@ test('dashboard URL import persists redacted credential work and explicit unsupp
   await page.getByRole('button', { name: 'Import project', exact: true }).click();
   await expect(page.getByText(/Credential coverage: 3 UTF-8 files/)).toBeVisible();
   await expect(
-    page.getByText(/RLS verification coverage: unsupported sql · SQL_UNSUPPORTED/),
+    page.getByText(/RLS verification coverage: unsupported sql · SQL_CALL_UNSUPPORTED/),
   ).toBeVisible();
   await page.reload();
   await expect(page.getByText(/Credential coverage: 3 UTF-8 files/)).toBeVisible();
@@ -38,9 +41,7 @@ test('dashboard URL import persists redacted credential work and explicit unsupp
   const view = validate('ProjectView', parseStrictJson(text, 16 * 1024 * 1024));
   expect(view.jobs.filter((j) => j.kind === 'import')).toHaveLength(1);
   expect(view.findings.some((f) => f.category === 'CREDENTIAL_EXPOSURE')).toBe(true);
-  expect(view.sql_analysis?.diagnostics.some((d) => d.code === 'SQL_FUNCTION_UNSUPPORTED')).toBe(
-    true,
-  );
+  expect(view.sql_analysis?.diagnostics.some((d) => d.code === 'SQL_CALL_UNSUPPORTED')).toBe(true);
   expect(view.findings.some((f) => f.source.kind === 'sql_ast')).toBe(true);
   expect(view.summary).not.toBeNull();
   expect(view.snapshot).toBeNull();

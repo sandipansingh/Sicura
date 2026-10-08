@@ -520,3 +520,9 @@ Gemma Analysis — advisory is a visible project panel with summary, linked prio
 SchemaSnapshot optionally records admitted_schema_digest for current-input matching. Replica failure keeps static findings unobserved and its job failed; ProjectSummary is queued separately and does not turn failure into passing verification.
 
 Imported-project views omit manual file-admission and replacement-file controls entirely. State that files and migrations were collected automatically; Rescan repository refreshes the original source. Manual admission remains available only in project entry without an imported repository.
+
+## Expanded replay evidence contracts (D-32)
+
+Optional AdmittedInputs.replay contains profile/bootstrap versions, the authorized source, ordered file identities and a digest; it contains no executable routine text. Imported expanded input stores an empty schema_sql. SchemaSnapshot and Run optionally name replay_profile/bootstrap_version; expanded schema digests and approvals include that provenance. Table optionally records normalized foreign_keys, used for bounded prerequisite seeding and qualified UUID principal-key ownership inference. Legacy records remain readable.
+
+Project shows a catalogue only after complete replay; static reconstruction uncertainty does not invalidate the observed catalogue. Expected access remains declared/inferred/unknown. A missing effective grant may deny even an own-row control: that fails an inferred own_rows_only assumption and cannot support a cross-user conclusion. SEED_ASSIGNMENT_LIMIT and dependency/setup failures remain explicit incomplete coverage. No automatic declaration or vulnerability confirmation follows from these outcomes.

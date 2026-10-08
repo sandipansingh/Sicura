@@ -183,7 +183,8 @@ export function verifyProject(id: string, data: unknown, key: string): ContractM
     hash(request.expectation_revision_ids) !== hash(view(id).expectations.map((e) => e.revision_id))
   )
     throw new AppError('STALE_REVISION', 409);
-  if (!store.inputs(id).schema_sql) throw new AppError('SCHEMA_MISSING', 409);
+  if (!store.inputs(id).schema_sql && !store.inputs(id).replay)
+    throw new AppError('SCHEMA_MISSING', 409);
   return store.transaction(() => ({ job: store.enqueue(p, 'verify', 'verify', key, payload(p)) }));
 }
 export function investigateFinding(

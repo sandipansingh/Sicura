@@ -92,7 +92,7 @@ export function resolveExpectations(
             rationale:
               edit?.rationale ??
               (inferred
-                ? 'Single UUID ownership column references auth.users(id)'
+                ? 'Single UUID ownership column has a foreign-key chain to auth.users(id)'
                 : 'Intended access has not been declared'),
             signals: inferred ? ['UUID ownership FK'] : [],
             confirmed_by: edit ? 'local_operator' : null,

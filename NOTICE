@@ -20,3 +20,5 @@ Bundled Bebas Neue, Space Grotesk and JetBrains Mono fonts are from the
 Google Fonts repository, licensed under the SIL Open Font License 1.1.
 See licenses/fonts for the original copyright/license notices and
 config/fonts-lock.json for exact source commit, paths and SHA-256 digests.
+
+The expanded SQL admission parser includes libpg_query (BSD-3-Clause), built from pinned PostgreSQL 17 sources. See licenses/libpg-query-LICENSE and config/sql-parser-lock.json.

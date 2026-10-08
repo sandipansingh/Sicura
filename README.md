@@ -7,7 +7,7 @@ A local security workbench for credential exposure and PostgreSQL row-level secu
 Install the packaged release artifact:
 
 ```sh
-npm install --global /absolute/path/to/sicura-0.3.0.tgz
+npm install --global /absolute/path/to/sicura-0.4.0.tgz
 sicura doctor
 sicura scan .
 sicura scan https://github.com/owner/repository
@@ -57,7 +57,7 @@ Stop the development server before running build or browser checks because Next.
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm run check:env`        | Verify runtime versions, Docker readiness, and the model digest                                                              |
 | `pnpm run verify`           | Contracts, lint, formatting, strict types, unit/integration tests, smoke, production build, and browser workflows            |
-| `pnpm run package`          | Build the installable `sicura-0.3.0.tgz` artifact                                                                            |
+| `pnpm run package`          | Build the installable `sicura-0.4.0.tgz` artifact                                                                            |
 | `pnpm run test:package`     | Install into an empty consumer and check the compiled CLI, dashboard, verification, approval, export, redaction, and cleanup |
 | `pnpm run test:integration` | Check disposable replicas and adversarial cases                                                                              |
 | `pnpm run test:e2e`         | Exercise project entry and the complete review workflow through the browser                                                  |
@@ -67,6 +67,7 @@ Stop the development server before running build or browser checks because Next.
 
 The Next.js dashboard exposes a thin, validated loopback API. A single worker owns container and model jobs; SQLite stores redacted metadata, admitted secret-free SQL, and immutable evidence. Gemma receives redacted structured facts and returns schema-validated JSON. Application code renders fixed probes and remediation templates; the model has no SQL, tool, or request executor. See the [specifications](docs/README.md) and [AI component](skills.md).
 
+- Repository imports support bounded SQL/PLpgSQL routines, triggers, procedural migrations and Supabase database helpers in the isolated replica. Routine bodies remain transient; verification rereads the original migration digests. Changed files require Rescan repository.
 - Complex migration chains receive bounded static SQL analysis and file/line diagnostics even when replica replay is unsupported. AST declarations are distinct from observed catalogue and verified evidence.
 - Exactly `RLS_MISCONFIGURATION` and `CREDENTIAL_EXPOSURE` are supported. The SQL admission profile covers a bounded set of base-table schemas, constraints, defaults, indexes, and ordered policy migrations. Unsupported semantics are rejected or marked not testable.
 - Verification runs only in disposable local replicas with synthetic rows and controlled identities. It does not reproduce production routes, JWT issuance, hooks, storage, edge functions, live data, or every business predicate.

@@ -90,7 +90,8 @@ export type UrnProofsecContracts10 =
   | SqlRlsEvidence
   | ProjectSummaryOutput
   | ProjectSummary
-  | ProjectInvestigateRequest;
+  | ProjectInvestigateRequest
+  | ReplayManifest;
 export type FindingState =
   | "needs_expectation"
   | "suspected"
@@ -148,7 +149,8 @@ export type TestReasonCode =
   | "JOB_DEADLINE"
   | "CANCELLED"
   | "EXPECTATION_UNKNOWN"
-  | "UNEXPECTED_DB_ERROR";
+  | "UNEXPECTED_DB_ERROR"
+  | "SEED_ASSIGNMENT_LIMIT";
 export type ImportSource =
   | {
       kind: "github";
@@ -341,6 +343,9 @@ export interface Run {
    */
   result_ids: string[];
   created_at: string;
+  replay_profile?: "repository-v2" | "repository-v3";
+  bootstrap_version?: "legacy-v1" | "supabase-database-v1";
+  replay_sql_digest?: string;
 }
 export interface GemmaInput {
   schema_version: "1.0";
@@ -769,6 +774,22 @@ export interface Table {
       DELETE: boolean;
     };
   };
+  /**
+   * @maxItems 500
+   */
+  foreign_keys?: {
+    /**
+     * @maxItems 32
+     */
+    columns: string[];
+    schema: string;
+    table: string;
+    /**
+     * @maxItems 32
+     */
+    target_columns: string[];
+    deferrable: boolean;
+  }[];
 }
 export interface SchemaSnapshot {
   id: string;
@@ -779,6 +800,9 @@ export interface SchemaSnapshot {
   tables: Table[];
   postgres_version: string;
   admitted_schema_digest?: string;
+  replay_profile?: "repository-v2" | "repository-v3";
+  bootstrap_version?: "legacy-v1" | "supabase-database-v1";
+  replay_sql_digest?: string;
 }
 export interface AdmittedInputs {
   schema_sql: string;
@@ -804,6 +828,7 @@ export interface AdmittedInputs {
    */
   credential_fingerprints: CredentialFingerprint[];
   sql_analysis?: SQLAnalysis;
+  replay?: ReplayManifest;
 }
 export interface CredentialFingerprint {
   finding_id: string;
@@ -880,6 +905,21 @@ export interface SQLDiagnostic {
   code: string;
   construct: string;
   message: string;
+}
+export interface ReplayManifest {
+  profile: "repository-v3";
+  bootstrap_version: "supabase-database-v1";
+  source: ImportSource;
+  /**
+   * @minItems 1
+   * @maxItems 200
+   */
+  files: {
+    path: string;
+    bytes: number;
+    digest: string;
+  }[];
+  digest: string;
 }
 export interface JobPayload {
   finding_id: string | null;
@@ -991,7 +1031,7 @@ export interface ImportReport {
     reason_code: string | null;
   };
   error_code: string | null;
-  sql_profile: "repository-v2";
+  sql_profile: "repository-v2" | "repository-v3";
   created_at: string;
   input_revision: number;
 }

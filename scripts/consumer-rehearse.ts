@@ -9,7 +9,8 @@ import { createHash } from 'node:crypto';
 import lock from '../config/runtime-lock.json';
 import { makeReport } from '../eval/harness/runtime';
 
-const artifact = resolve(process.argv[2] ?? '.local/artifacts/sicura-0.3.0.tgz');
+const version = JSON.parse(await readFile('package.json', 'utf8')).version as string;
+const artifact = resolve(process.argv[2] ?? `.local/artifacts/sicura-${version}.tgz`);
 const dir = await mkdtemp(join(tmpdir(), 'proofsec-consumer-gate-'));
 const consumer = join(dir, 'consumer');
 const workspace = join(dir, 'workspace');
@@ -28,7 +29,7 @@ if (install.includes(secret)) throw new Error('CONSUMER_SECRET_LEAK');
 execFileSync('git', ['init', '-q', workspace]);
 await writeFile(
   join(workspace, 'supabase/migrations/1_schema.sql'),
-  `CREATE TABLE public.profiles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES auth.users(id), value text NOT NULL DEFAULT 'synthetic', created timestamptz DEFAULT now()); ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY; GRANT SELECT ON public.profiles TO authenticated; CREATE POLICY broad ON public.profiles FOR SELECT TO authenticated USING (true);`,
+  `BEGIN; CREATE TABLE public.profiles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES auth.users(id), value text NOT NULL DEFAULT 'synthetic', created timestamptz DEFAULT now()); CREATE FUNCTION public.touch_profile() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.created := now(); RETURN NEW; END $$; CREATE TRIGGER touch BEFORE INSERT OR UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.touch_profile(); ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY; GRANT SELECT ON public.profiles TO authenticated; CREATE POLICY broad ON public.profiles FOR SELECT TO authenticated USING (true); COMMIT;`,
 );
 await writeFile(join(workspace, 'client.ts'), `const serviceRoleKey = "${secret}";`);
 const executable = join(consumer, 'node_modules/sicura/bin/sicura.mjs');
@@ -84,7 +85,7 @@ try {
   await expect(page.getByRole('link', { name: 'Sicura', exact: true })).toHaveText('SSICURA');
   await expect(page.getByRole('button', { name: 'Evaluation', exact: true })).toHaveCount(0);
   await expect(page.getByText(/flagship|demo/i)).toHaveCount(0);
-  await expect(page.getByText(/Supported SQL admitted/)).toBeVisible({ timeout: 45000 });
+  await expect(page.getByText(/Replica catalogue available/)).toBeVisible({ timeout: 45000 });
   await expect(page.getByLabel('Schema and source files', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Run local verification' })).toBeEnabled({
     timeout: 90000,
@@ -101,13 +102,13 @@ try {
     throw new Error('CONSUMER_LAYOUT_OVERFLOW');
   await page.screenshot({ path: join(screenshots, 'landing-mobile.png'), fullPage: true });
   await page.goto(url[1]!);
-  await expect(page.getByText(/Supported SQL admitted/)).toBeVisible();
+  await expect(page.getByText(/Replica catalogue available/)).toBeVisible();
   if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth))
     throw new Error('CONSUMER_LAYOUT_OVERFLOW');
   await page.screenshot({ path: join(screenshots, 'workbench-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.reload();
-  await expect(page.getByText(/Supported SQL admitted/)).toBeVisible();
+  await expect(page.getByText(/Replica catalogue available/)).toBeVisible();
   for (const path of ['/api/demo', '/api/evaluation']) {
     const response = await page.request.get(origin + path);
     if (
@@ -141,6 +142,8 @@ try {
   );
   if (view.summary?.status !== 'available' || !view.summary.output)
     throw new Error('CONSUMER_PROJECT_SUMMARY_UNAVAILABLE');
+  if (view.snapshot?.replay_profile !== 'repository-v3' || view.sql_analysis?.diagnostics.length)
+    throw new Error('CONSUMER_EXPANDED_REPLAY_INVALID');
   if (view.jobs.filter((j) => j.kind === 'import').length !== 1)
     throw new Error('CONSUMER_DUPLICATE_IMPORT');
   const importedExpectation = view.expectations.find(
@@ -284,7 +287,7 @@ try {
       model: lock.ollama_model,
     },
     dataset:
-      'Synthetic consumer repository: one table, UUID/time defaults, broad SELECT, redaction sentinel',
+      'Synthetic consumer repository: transaction-wrapped table and PLpgSQL trigger, UUID/time defaults, broad SELECT, redaction sentinel',
     checks: [
       'npm install in empty consumer',
       'Sicura package/bin/help/NOTICE and production dashboard branding',

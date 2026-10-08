@@ -1,6 +1,7 @@
 import { validate, type SQLAnalysis, type SQLPolicy } from '../../../contracts/src/index';
 import { admitSql, checkAst, parseSql } from '../intake/admit';
-import { errorCode } from '../errors';
+import { admitRepositorySql } from '../intake/repository-profile';
+import { AppError, errorCode } from '../errors';
 import { newId } from '../hash';
 import { redactValue } from '../secrets/sink';
 
@@ -57,6 +58,7 @@ const codes: Record<string, string> = {
 export async function analyzeSqlFiles(
   files: { path: string; content: string }[],
   input_revision = 1,
+  expanded = false,
 ): Promise<SQLAnalysis> {
   const a: SQLAnalysis = {
     id: newId('sql'),
@@ -361,9 +363,21 @@ export async function analyzeSqlFiles(
   }
   try {
     const sql = files.map((f) => f.content).join('\n');
-    a.replay_ready = !!(sql && (await admitSql(sql)).trim());
+    a.replay_ready = !!(sql && (await (expanded ? admitRepositorySql : admitSql)(sql)).trim());
+    if (expanded && a.replay_ready) a.diagnostics = [];
   } catch (e) {
     a.replay_reason = errorCode(e);
+    if (expanded && e instanceof AppError && e.context.statement) {
+      const culprit = a.diagnostics.find((d) => d.statement === e.context.statement);
+      if (culprit)
+        a.diagnostics = [
+          {
+            ...culprit,
+            code: e.code,
+            message: `${culprit.construct}: ${e.code.replaceAll('_', ' ').toLowerCase()}. No replica access conclusion.`,
+          },
+        ];
+    }
     if (a.replay_reason === 'SQL_CONTAINS_SECRET')
       diagnose(files[0]?.path ?? 'schema.sql', 1, 0, 'Migration chain', 'SQL_CONTAINS_SECRET');
   }

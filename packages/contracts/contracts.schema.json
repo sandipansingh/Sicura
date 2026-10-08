@@ -593,7 +593,8 @@
         "JOB_DEADLINE",
         "CANCELLED",
         "EXPECTATION_UNKNOWN",
-        "UNEXPECTED_DB_ERROR"
+        "UNEXPECTED_DB_ERROR",
+        "SEED_ASSIGNMENT_LIMIT"
       ]
     },
     "TestResult": {
@@ -917,6 +918,16 @@
           "type": "string",
           "format": "date-time",
           "pattern": "Z$"
+        },
+        "replay_profile": {
+          "enum": ["repository-v2", "repository-v3"]
+        },
+        "bootstrap_version": {
+          "enum": ["legacy-v1", "supabase-database-v1"]
+        },
+        "replay_sql_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     },
@@ -2606,6 +2617,44 @@
               }
             }
           }
+        },
+        "foreign_keys": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["columns", "schema", "table", "target_columns", "deferrable"],
+            "properties": {
+              "columns": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 63
+                },
+                "maxItems": 32
+              },
+              "schema": {
+                "type": "string",
+                "maxLength": 63
+              },
+              "table": {
+                "type": "string",
+                "maxLength": 63
+              },
+              "target_columns": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 63
+                },
+                "maxItems": 32
+              },
+              "deferrable": {
+                "type": "boolean"
+              }
+            }
+          }
         }
       }
     },
@@ -2634,6 +2683,16 @@
           "maxLength": 4000
         },
         "admitted_schema_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "replay_profile": {
+          "enum": ["repository-v2", "repository-v3"]
+        },
+        "bootstrap_version": {
+          "enum": ["legacy-v1", "supabase-database-v1"]
+        },
+        "replay_sql_digest": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
         }
@@ -2703,6 +2762,9 @@
         },
         "sql_analysis": {
           "$ref": "#/$defs/SQLAnalysis"
+        },
+        "replay": {
+          "$ref": "#/$defs/ReplayManifest"
         }
       }
     },
@@ -4530,7 +4592,7 @@
           ]
         },
         "sql_profile": {
-          "const": "repository-v2"
+          "enum": ["repository-v2", "repository-v3"]
         },
         "created_at": {
           "type": "string",
@@ -5100,6 +5162,51 @@
         "expectation_set_revision": {
           "type": "integer",
           "minimum": 0
+        }
+      }
+    },
+    "ReplayManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "bootstrap_version", "source", "files", "digest"],
+      "properties": {
+        "profile": {
+          "const": "repository-v3"
+        },
+        "bootstrap_version": {
+          "const": "supabase-database-v1"
+        },
+        "source": {
+          "$ref": "#/$defs/ImportSource"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "bytes", "digest"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2097152
+              },
+              "digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     }

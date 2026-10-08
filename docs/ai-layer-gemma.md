@@ -281,3 +281,7 @@ Project advice is a separate task with `ProjectSummaryOutput` (summary, up to fi
 Use the pinned local gemma4:e4b artifact, temperature 0, 4,096 context, 768 output tokens, think:false, one request at a time through the serial worker, a 30-second attempt deadline and at most one retry. Advice exposes an explanation, not a private reasoning stream. Model/tag drift, invalid output, truncation or outage stores unavailable plus a stable reason, without canned output. Cancellation/interruption leaves deterministic work intact and enables explicit retry. Automatic scheduling is deduplicated by input/expectation revision, model digest and prompt `project-1`.
 
 Per-finding SQL-AST investigations explicitly qualify facts as submitted declarations. They have no executable test/remediation or expectation proposal; a replica catalogue is required for the existing observed-schema action validation. Credential investigations never invent a synthetic context for real imported artifacts. Human review of model faithfulness remains pending.
+
+## Expanded replay context (D-32)
+
+Gemma continues to consume normalized/redacted finding facts, diagnostics and coverage only. Repository routine bodies never enter prompts, persistence or advisory UI. Successful database replay may remove earlier unsupported-SQL blockers, but does not authorize Gemma to write or run SQL. Actual local observations, failed controls and unknown expectations retain their authority and qualification independently of a summary. No new model pin or evaluation result is introduced.

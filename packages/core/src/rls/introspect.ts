@@ -29,6 +29,13 @@ export interface Table {
   columns: Column[];
   primary_key: string[];
   constraints: { name: string; kind: string; definition: string }[];
+  foreign_keys?: {
+    columns: string[];
+    schema: string;
+    table: string;
+    target_columns: string[];
+    deferrable: boolean;
+  }[];
   policies: Policy[];
   grants: Record<
     'authenticated' | 'anon',
@@ -40,6 +47,7 @@ export interface SchemaSnapshot {
   digest: string;
   tables: Table[];
   postgres_version: string;
+  replay_sql_digest?: string;
 }
 export function quoteIdentifier(identifier: string): string {
   if (!identifier || Buffer.byteLength(identifier) > 63 || identifier.includes('\0'))
@@ -60,7 +68,7 @@ export async function introspect(
     rls_enabled: boolean;
     force_rls: boolean;
   }>(
-    `SELECT n.nspname AS schema,c.relname AS name,pg_get_userbyid(c.relowner) AS owner,c.relrowsecurity AS rls_enabled,c.relforcerowsecurity AS force_rls FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname='schema_loader') ORDER BY n.nspname,c.relname`,
+    `SELECT n.nspname AS schema,c.relname AS name,pg_get_userbyid(c.relowner) AS owner,c.relrowsecurity AS rls_enabled,c.relforcerowsecurity AS force_rls FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE c.relkind='r' AND c.relowner=(SELECT oid FROM pg_roles WHERE rolname='schema_loader') AND n.nspname NOT IN ('auth','storage','extensions','supabase_migrations') ORDER BY n.nspname,c.relname`,
   );
   const tables: Table[] = [];
   for (const row of result.rows) {
@@ -82,6 +90,16 @@ export async function introspect(
       key,
     );
     const grants = {} as Table['grants'];
+    const foreignKeys =
+      replica.profile === 'repository-v3'
+        ? await db.query<NonNullable<Table['foreign_keys']>[number]>(
+            `SELECT ARRAY(SELECT a.attname::text FROM unnest(k.conkey) WITH ORDINALITY u(num,ord) JOIN pg_attribute a ON a.attrelid=k.conrelid AND a.attnum=u.num ORDER BY u.ord) AS columns,
+      rn.nspname AS schema, rc.relname AS table,
+      ARRAY(SELECT a.attname::text FROM unnest(k.confkey) WITH ORDINALITY u(num,ord) JOIN pg_attribute a ON a.attrelid=k.confrelid AND a.attnum=u.num ORDER BY u.ord) AS target_columns,
+      k.condeferrable AS deferrable FROM pg_constraint k JOIN pg_class c ON c.oid=k.conrelid JOIN pg_namespace n ON n.oid=c.relnamespace JOIN pg_class rc ON rc.oid=k.confrelid JOIN pg_namespace rn ON rn.oid=rc.relnamespace WHERE n.nspname=$1 AND c.relname=$2 AND k.contype='f' ORDER BY k.conname`,
+            key,
+          )
+        : null;
     for (const role of ['authenticated', 'anon'] as const) {
       const value = await db.query<Record<'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE', boolean>>(
         `SELECT has_schema_privilege($1,n.oid,'USAGE') AND has_table_privilege($1,c.oid,'SELECT') AS "SELECT",has_schema_privilege($1,n.oid,'USAGE') AND has_table_privilege($1,c.oid,'INSERT') AS "INSERT",has_schema_privilege($1,n.oid,'USAGE') AND has_table_privilege($1,c.oid,'UPDATE') AS "UPDATE",has_schema_privilege($1,n.oid,'USAGE') AND has_table_privilege($1,c.oid,'DELETE') AS "DELETE" FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$2 AND c.relname=$3`,
@@ -96,7 +114,33 @@ export async function introspect(
       constraints: constraints.rows,
       policies: policies.rows,
       grants,
+      ...(foreignKeys ? { foreign_keys: foreignKeys.rows } : {}),
     });
+  }
+  if (replica.profile === 'repository-v3') {
+    // Ownership inference may follow a UUID principal key through application profile tables.
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const table of tables)
+        for (const fk of table.foreign_keys ?? []) {
+          if (fk.columns.length !== 1 || fk.target_columns.length !== 1) continue;
+          const target = tables.find((t) => t.schema === fk.schema && t.name === fk.table);
+          const targetColumn = target?.columns.find((c) => c.name === fk.target_columns[0]);
+          const column = table.columns.find((c) => c.name === fk.columns[0]);
+          if (
+            column &&
+            !column.owner_fk &&
+            column.type === 'uuid' &&
+            targetColumn?.owner_fk &&
+            target?.primary_key.length === 1 &&
+            target.primary_key[0] === targetColumn.name
+          ) {
+            column.owner_fk = true;
+            changed = true;
+          }
+        }
+    }
   }
   if (
     tables.length > 50 ||
@@ -106,11 +150,20 @@ export async function introspect(
     throw new AppError('SCHEMA_LIMIT');
   const version = (await db.query<{ server_version: string }>('SHOW server_version')).rows[0]!
     .server_version;
-  const digest = hash({ tables, postgres_version: version });
+  const provenance =
+    replica.profile === 'repository-v3'
+      ? {
+          replay_profile: replica.profile,
+          bootstrap_version: 'supabase-database-v1' as const,
+          replay_sql_digest: replica.baseline_digest!,
+        }
+      : {};
+  const digest = hash({ tables, postgres_version: version, ...provenance });
   return validate('SchemaSnapshot', {
     id: 'snapshot_' + hash({ project_id, digest }).slice(0, 24),
     digest,
     tables,
     postgres_version: version,
+    ...provenance,
   });
 }

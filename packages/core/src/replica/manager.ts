@@ -6,10 +6,13 @@ import pg from 'pg';
 import lock from '../../../../config/runtime-lock.json';
 import { AppError } from '../errors';
 import { newId } from '../hash';
-import { BOOTSTRAP } from './bootstrap';
+import { BOOTSTRAP, SUPABASE_BOOTSTRAP } from './bootstrap';
 import { openReplicaTransport } from './transport';
 import { resolve } from 'node:path';
 import { hash } from '../hash';
+import { parseSql } from '../intake/admit';
+import { deparse } from 'pgsql-parser';
+import { quoteIdentifier } from '../rls/introspect';
 
 const execute = promisify(execFile);
 const LABEL = 'io.proofsec.owned=1';
@@ -27,17 +30,24 @@ export interface Replica {
   setup: pg.Client;
   connectVerifier(): Promise<pg.Client>;
   apply(sql: string): Promise<void>;
+  profile: 'repository-v2' | 'repository-v3';
+  baseline_digest?: string;
   assertNoEgress(): Promise<void>;
 }
 let active = false;
-export async function withReplica<T>(callback: (replica: Replica) => Promise<T>): Promise<T> {
+export async function withReplica<T>(
+  callback: (replica: Replica) => Promise<T>,
+  profile: 'repository-v2' | 'repository-v3' = 'repository-v2',
+): Promise<T> {
   if (active) throw new AppError('REPLICA_BUSY', 409);
   active = true;
   const id = newId('proofsec');
   const network = id + '_net';
   const password = randomBytes(24).toString('hex');
   const verifierPassword = randomBytes(24).toString('hex');
+  const started = Date.now();
   let setup: pg.Client | undefined;
+  let loader: pg.Client | undefined;
   let transport: Awaited<ReturnType<typeof openReplicaTransport>> | undefined;
   try {
     await docker(['network', 'create', '--internal', '--label', LABEL, '--label', SCOPE, network]);
@@ -119,6 +129,7 @@ export async function withReplica<T>(callback: (replica: Replica) => Promise<T>)
     }
     if (!setup) throw new AppError('REPLICA_NOT_READY', 503);
     await setup.query(BOOTSTRAP);
+    if (profile === 'repository-v3') await setup.query(SUPABASE_BOOTSTRAP);
     // SET ROLE password grammar cannot use a driver parameter: use trusted set_config + fixed DO.
     await setup.query("SELECT set_config('proofsec.verifier_password',$1,false)", [
       verifierPassword,
@@ -126,10 +137,30 @@ export async function withReplica<T>(callback: (replica: Replica) => Promise<T>)
     await setup.query(
       "DO $$ BEGIN EXECUTE format('ALTER ROLE verifier_login PASSWORD %L', current_setting('proofsec.verifier_password')); END $$;",
     );
+    if (profile === 'repository-v3') {
+      await setup.query("SELECT set_config('proofsec.loader_password',$1,false)", [
+        randomBytes(24).toString('hex'),
+      ]);
+      await setup.query(
+        "DO $$ BEGIN EXECUTE format('ALTER ROLE schema_loader_login PASSWORD %L',current_setting('proofsec.loader_password')); END $$;",
+      );
+      const passwordResult = await setup.query<{ password: string }>(
+        "SELECT current_setting('proofsec.loader_password') AS password",
+      );
+      loader = new pg.Client({
+        ...connection,
+        user: 'schema_loader_login',
+        password: passwordResult.rows[0]!.password,
+      });
+      loader.on('error', () => {});
+      await loader.connect();
+      await loader.query('SET ROLE schema_loader; SET search_path=public,extensions');
+    }
     const client = setup;
     const replica: Replica = {
       id,
       setup: client,
+      profile,
       connectVerifier: async () => {
         const p = new pg.Client({
           ...connection,
@@ -141,6 +172,47 @@ export async function withReplica<T>(callback: (replica: Replica) => Promise<T>)
         return p;
       },
       apply: async (sql) => {
+        if (loader) {
+          // Separate restricted login: even an input COMMIT cannot restore the administrator.
+          const { ast } = await parseSql(sql);
+          for (const stmt of ast.stmts as { stmt: Record<string, unknown> }[]) {
+            if (Date.now() - started > 300_000) throw new AppError('JOB_DEADLINE');
+            const identity = await loader.query<{ current_user: string }>('SELECT current_user');
+            if (identity.rows[0]?.current_user !== 'schema_loader')
+              throw new AppError('IDENTITY_ASSERTION_FAILED');
+            try {
+              await loader.query(
+                await deparse({ version: Number(ast.version), stmts: [stmt] } as Parameters<
+                  typeof deparse
+                >[0]),
+              );
+            } catch (e) {
+              const sqlstate =
+                e &&
+                typeof e === 'object' &&
+                'code' in e &&
+                typeof e.code === 'string' &&
+                /^[A-Z0-9]{5}$/.test(e.code)
+                  ? e.code
+                  : 'unknown';
+              throw new AppError('SCHEMA_APPLY_FAILED', 422, {
+                sqlstate,
+                statement: (ast.stmts as unknown[]).indexOf(stmt) + 1,
+              });
+            }
+          }
+          const schemas = await client.query<{ schema: string }>(
+            "SELECT nspname AS schema FROM pg_namespace WHERE nspowner=(SELECT oid FROM pg_roles WHERE rolname='schema_loader') AND nspname NOT IN ('auth','storage') ORDER BY nspname",
+          );
+          for (const { schema } of schemas.rows) {
+            const identifier = quoteIdentifier(schema);
+            await client.query(
+              `GRANT USAGE ON SCHEMA ${identifier} TO harness_seed; GRANT ALL ON ALL TABLES IN SCHEMA ${identifier} TO harness_seed; GRANT ALL ON ALL SEQUENCES IN SCHEMA ${identifier} TO harness_seed; GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA ${identifier} TO harness_seed`,
+            );
+          }
+          replica.baseline_digest ??= hash(sql);
+          return;
+        }
         await client.query('BEGIN');
         try {
           await client.query('SET LOCAL ROLE schema_loader');
@@ -168,6 +240,7 @@ export async function withReplica<T>(callback: (replica: Replica) => Promise<T>)
     await replica.assertNoEgress();
     return await callback(replica);
   } finally {
+    await loader?.end().catch(() => {});
     await setup?.end().catch(() => {});
     await transport?.close();
     const cleanup = await Promise.allSettled([docker(['rm', '--force', id])]);

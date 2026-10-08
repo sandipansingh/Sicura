@@ -235,3 +235,9 @@ Install the updated artifact with `npm install --global /absolute/path/to/sicura
 Replica startup/apply failures preserve static review and enqueue advisory analysis independently. Current catalogue projections bind the admitted SQL digest; source-only rescans may reuse an identical catalogue, while a changed or unsupported chain cannot inherit one. Legacy catalogues without a digest are exposed only at their original input revision.
 
 For CLI/repository imports, file collection is automatic and the saved-project UI omits manual upload. Repository rescans reuse the CLI-owned source; the browser does not request a new filesystem path.
+
+## Expanded repository database replay (D-32)
+
+Repository imports first attempt the compatible repository-v2 path, then bounded repository-v3 admission. The expanded path rereads an ordered manifest of path/byte/digest identities through the original authorized source; GitHub is pinned to the imported commit. Routines and raw AST remain transient, including between import and verification. Changed files produce REPLAY_INPUT_CHANGED and require Rescan repository. The complete catalogue becomes available only after the full chain succeeds; failure destroys the staged replica. Manually admitted projects retain their existing profile.
+
+Database compatibility includes listed extensions, auth.users/claims helpers, storage objects/foldername and known roles. It has no Supabase services or production credentials. Separate restricted loader and checked verifier connections prevent transaction escape. Synthetic prerequisite seeds preserve constraints/triggers and are scoped per target dependency closure.

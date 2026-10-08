@@ -137,7 +137,7 @@ export async function executeScenario(
   }
   let client: pg.Client | undefined;
   try {
-    await restoreSeeds(replica, plan);
+    await restoreSeeds(replica, plan, seed);
     const q = query(s);
     const target = (
       await replica.setup.query<Row>(
@@ -154,6 +154,7 @@ export async function executeScenario(
     // Privileged shape control is rolled back; it is never an attack observation.
     await replica.setup.query('BEGIN');
     try {
+      if (plan.repository) await replica.setup.query('SET LOCAL ROLE harness_seed');
       await replica.setup.query(q.sql, q.values);
     } finally {
       await replica.setup.query('ROLLBACK');

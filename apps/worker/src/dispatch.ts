@@ -21,7 +21,7 @@ import { AppError, errorCode, logEvent } from '../../../packages/core/src/errors
 import { compareStaticRescan } from '../../../packages/core/src/secrets/rescan';
 import { importRepository } from '../../../packages/core/src/repository/import';
 import { saveImportReport } from '../../../packages/store/src/imports';
-import { hash } from '../../../packages/core/src/hash';
+import { inputSchemaDigest, readReplay } from '../../../packages/core/src/repository/replay';
 
 function save(store: Store, f: Finding): void {
   store.put('Finding', f.id, f.project_id, f, f.revision);
@@ -208,7 +208,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
       }
       inputs = imported.inputs;
       store.setInputs(p.id, inputs);
-      p = { ...p, admitted_schema_digest: inputs.schema_sql ? hash(inputs.schema_sql) : null };
+      p = { ...p, admitted_schema_digest: inputSchemaDigest(inputs) };
       store.saveProject(p);
       inputs.credential_findings.forEach((f) => {
         const fp = inputs.credential_fingerprints.find((x) => x.finding_id === f.id)?.fingerprint;
@@ -321,9 +321,10 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
         );
     });
   } else if (job.kind === 'scan' || job.kind === 'import' || job.kind === 'rescan_repository') {
-    if (inputs.schema_sql) {
+    if (inputs.schema_sql || inputs.replay) {
+      const sql = await readReplay(inputs, cancelled);
       const data = await withReplica(async (replica) => {
-        await replica.apply(inputs.schema_sql);
+        await replica.apply(sql);
         cancelled();
         const snapshot = await introspect(replica, p.id);
         const expectations = resolveExpectations(
@@ -338,7 +339,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
         if (findings.length + inputs.credential_findings.length > 500)
           throw new AppError('IMPORT_FINDING_LIMIT');
         return { snapshot, expectations, findings };
-      }).catch((error: unknown) => {
+      }, inputs.replay?.profile).catch((error: unknown) => {
         cancelled();
         persistStaticReview(store, p, inputs, job.kind === 'rescan_repository');
         throw error;
@@ -349,7 +350,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
           'SchemaSnapshot',
           data.snapshot.id,
           p.id,
-          { ...data.snapshot, admitted_schema_digest: hash(inputs.schema_sql) },
+          { ...data.snapshot, admitted_schema_digest: inputSchemaDigest(inputs)! },
           p.input_revision,
         );
         data.expectations.forEach((e) => store.put('Expectation', e.id, p.id, e, e.revision));
@@ -361,8 +362,9 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
     }
   } else if (job.kind === 'verify') {
     const expectations = store.list('Expectation', p.id);
+    const sql = await readReplay(inputs, cancelled);
     const before = await withReplica(async (replica) => {
-      await replica.apply(inputs.schema_sql);
+      await replica.apply(sql);
       cancelled();
       const snapshot = await introspect(replica, p.id);
       return runMatrix(
@@ -376,7 +378,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
         null,
         cancelled,
       );
-    });
+    }, inputs.replay?.profile);
     cancelled();
     store.transaction(() => {
       store.put('Run', before.run.id, p.id, before.run);
@@ -475,12 +477,13 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
     const pending = transitionFinding(f, { type: 'patch_applied', approved: true });
     save(store, pending);
     const after = await retestPatch(
-      inputs.schema_sql,
+      await readReplay(inputs, cancelled),
       patch,
       baseline,
       store.list('Expectation', p.id),
       false,
       cancelled,
+      inputs.replay?.profile,
     );
     cancelled();
     store.transaction(() => {

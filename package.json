@@ -1,6 +1,6 @@
 {
   "name": "sicura",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
@@ -37,7 +37,8 @@
     "package": "pnpm run build && node scripts/package.mjs",
     "doctor": "node scripts/check-env.mjs",
     "test:package": "tsx scripts/consumer-rehearse.ts",
-    "import:example": "tsx scripts/import-example.ts"
+    "import:example": "tsx scripts/import-example.ts",
+    "parser:build": "node scripts/build-sql-parser.mjs"
   },
   "dependencies": {
     "ajv": "8.20.0",

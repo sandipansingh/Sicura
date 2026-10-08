@@ -413,7 +413,7 @@ export function checkAst(ast: Ast, knownSchemas: string[] = ['public']): void {
   }
   if (tables > 50 || columns > 2000 || policies > 500) throw new AppError('SCHEMA_LIMIT');
 }
-export async function parseSql(sql: string): Promise<{ ast: Ast; sql: string }> {
+export async function parseSql(sql: string, expanded = false): Promise<{ ast: Ast; sql: string }> {
   if (Buffer.byteLength(sql) > 2 * 1024 * 1024) throw new AppError('INPUT_LIMIT', 413);
   const parsed = await new Promise<{ ast: Ast; sql: string }>((resolve, reject) => {
     const child = spawn(
@@ -424,6 +424,7 @@ export async function parseSql(sql: string): Promise<{ ast: Ast; sql: string }> 
           process.env.PROOFSEC_ROOT_DIR ?? process.cwd(),
           'packages/core/src/intake/sql-parser.mjs',
         ),
+        ...(expanded ? ['--repository-v3'] : []),
       ],
       { stdio: ['pipe', 'pipe', 'ignore'] },
     );
@@ -445,7 +446,29 @@ export async function parseSql(sql: string): Promise<{ ast: Ast; sql: string }> 
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new AppError('SQL_PARSE_FAILED'));
+      if (code !== 0) {
+        try {
+          const failure = parseStrictJson(output) as { error?: string; statement?: number };
+          if (
+            typeof failure.error === 'string' &&
+            /^SQL_[A-Z_]+$|^SCHEMA_LIMIT$/.test(failure.error)
+          )
+            return reject(
+              new AppError(
+                failure.error,
+                422,
+                Number.isInteger(failure.statement) &&
+                failure.statement! >= 1 &&
+                failure.statement! <= 2000
+                  ? { statement: failure.statement! }
+                  : {},
+              ),
+            );
+        } catch {
+          /* Raw parser details never escape the child. */
+        }
+        return reject(new AppError('SQL_PARSE_FAILED'));
+      }
       try {
         resolve(
           validate('ParserEnvelope', parseStrictJson(output, 16 * 1024 * 1024)) as {

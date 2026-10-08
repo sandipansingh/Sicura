@@ -46,13 +46,21 @@ export default function ProjectAnalysis({ view, busy, onInvestigate, onFinding, 
         </p>
         {a && (
           <p>
-            {a.complete
-              ? 'SQL declarations modeled'
-              : 'SQL declarations partially modeled; final permissions uncertain'}
+            {view.snapshot
+              ? 'Ordered migrations replayed in the local replica'
+              : a.complete
+                ? 'SQL declarations modeled'
+                : 'SQL declarations partially modeled; final permissions uncertain'}
             .{' '}
             {view.snapshot
               ? 'Replica catalogue available; review intended access before verification.'
               : 'Replica verification unavailable for this input. Static findings remain available.'}
+          </p>
+        )}
+        {view.snapshot?.replay_profile === 'repository-v3' && (
+          <p>
+            Database helper and trigger behavior is included. JWT, application routes and Storage
+            HTTP endpoints remain outside this verification scope.
           </p>
         )}
         {(view.imports?.length ?? 0) > 0 && (

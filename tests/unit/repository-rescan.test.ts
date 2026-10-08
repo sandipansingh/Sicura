@@ -120,7 +120,7 @@ it('rescans over 200 files without treating ignored paths as deleted, then verif
   }
 });
 
-it('preserves inferred intent and statement diagnostics across complex repository rescans', async () => {
+it('preserves inferred intent and refreshes a real catalogue across supported routine rescans', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'sicura-static-rescan-')),
     store = new Store(':memory:');
   try {
@@ -153,11 +153,16 @@ it('preserves inferred intent and statement diagnostics across complex repositor
     const current = store.get('Expectation', prior.id);
     expect(current.source).toBe('inferred');
     expect(current.revision).toBe(prior.revision + 1);
+    expect(store.currentSnapshot(p.id)?.replay_profile).toBe('repository-v3');
+    expect(store.inputs(p.id).sql_analysis?.diagnostics).toHaveLength(0);
+    expect(store.inputs(p.id).schema_sql).toBe('');
+    expect(store.inputs(p.id).replay).toBeDefined();
     expect(
       store
         .list('Finding', p.id)
-        .filter((f) => f.input_revision === 2 && f.source.kind === 'sql_ast'),
-    ).toHaveLength(8);
+        .filter((f) => f.input_revision === 2)
+        .every((f) => f.source.kind !== 'sql_ast'),
+    ).toBe(true);
     expect(store.list('Run', p.id)).toHaveLength(0);
   } finally {
     store.close();

@@ -45,6 +45,7 @@ export async function retestPatch(
   expectations: Expectation[],
   selectOnly = false,
   checkCancelled: () => void = () => {},
+  profile: 'repository-v2' | 'repository-v3' = 'repository-v2',
 ): Promise<{ run: Run; results: TestResult[]; comparison: RetestResult }> {
   verifyPatchIntegrity(patch);
   if (
@@ -93,5 +94,5 @@ export async function retestPatch(
       checkCancelled,
     );
     return { ...after, comparison: compareRetest(baseline, after) };
-  });
+  }, profile);
 }
