@@ -11,10 +11,19 @@ export function assertRepositoryFixture(id: RepositoryFixture, store: Store, job
   assert.equal(inputs.schema_sql, '');
   assert.equal(store.list('Run', job.project_id).length, 0);
   assert.equal(store.list('TestResult', job.project_id).length, 0);
-  assert.equal(
-    store.list('Finding', job.project_id).some((f) => f.category === 'RLS_MISCONFIGURATION'),
-    false,
+  const rls = store
+    .list('Finding', job.project_id)
+    .filter((f) => f.category === 'RLS_MISCONFIGURATION');
+  assert.ok(
+    rls.every(
+      (f) =>
+        f.source.kind === 'sql_ast' &&
+        f.evidence.kind === 'rls_static' &&
+        !['confirmed', 'fixed'].includes(f.state) &&
+        f.verification.evidence.length === 0,
+    ),
   );
+  if (id === 'unsupported-chain') assert.ok(rls.length > 0);
   assert.equal(
     JSON.stringify(store.db.prepare('SELECT * FROM records').all()).includes(repositorySentinel),
     false,

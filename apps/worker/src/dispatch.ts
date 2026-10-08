@@ -1,3 +1,4 @@
+import { repositoryScopeComplete } from '../../../packages/core/src/repository/rescan';
 import { Store } from '../../../packages/store/src/index';
 import {
   validate,
@@ -12,6 +13,9 @@ import { resolveExpectations } from '../../../packages/core/src/expectations/res
 import { analyzeRls } from '../../../packages/core/src/rls/analyze';
 import { runMatrix } from '../../../packages/core/src/verification/run';
 import { retestPatch } from '../../../packages/core/src/remediation/retest';
+import { staticExpectations, staticFindings } from '../../../packages/core/src/rls/static-findings';
+import { summarizeProject } from '../../../packages/core/src/ai/project-summary';
+import { enqueueAutomaticAnalysis } from '../../../packages/store/src/project-analysis';
 import { investigate } from '../../../packages/core/src/ai/ollama';
 import { AppError, errorCode, logEvent } from '../../../packages/core/src/errors';
 import { compareStaticRescan } from '../../../packages/core/src/secrets/rescan';
@@ -21,6 +25,29 @@ import { hash } from '../../../packages/core/src/hash';
 
 function save(store: Store, f: Finding): void {
   store.put('Finding', f.id, f.project_id, f, f.revision);
+}
+function persistStaticReview(
+  store: Store,
+  p: import('../../../packages/contracts/src/index').Project,
+  inputs: import('../../../packages/contracts/src/index').AdmittedInputs,
+  refresh: boolean,
+): void {
+  if (!inputs.sql_analysis?.tables.length) return;
+  const expectations = staticExpectations(
+    inputs.sql_analysis,
+    inputs.expectation_edits,
+    refresh ? store.list('Expectation', p.id) : [],
+    p.id,
+    refresh,
+  );
+  const findings = staticFindings(inputs.sql_analysis, expectations, p.id);
+  if (findings.length + inputs.credential_findings.length > 500)
+    throw new AppError('IMPORT_FINDING_LIMIT');
+  store.transaction(() => {
+    expectations.forEach((e) => store.put('Expectation', e.id, p.id, e, e.revision));
+    findings.forEach((f) => save(store, f));
+    store.saveProject({ ...p, expectation_set_revision: p.expectation_set_revision + 1 });
+  });
 }
 export async function dispatch(store: Store, job: Job, payload: JobPayload): Promise<void> {
   let p = store.get('Project', job.project_id);
@@ -36,7 +63,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
       throw new AppError('CANCELLED', 409);
   };
   cancelled();
-  if (job.kind === 'import') {
+  if (job.kind === 'import' || job.kind === 'rescan_repository') {
     const request = payload.import_request;
     if (!request) throw new AppError('IMPORT_REQUEST_MISSING');
     const initial = store.get('ImportReport', job.id);
@@ -50,25 +77,184 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
       (report) => saveImportReport(store, report),
     );
     cancelled();
+    const previousInputs = inputs;
+    const priorFindings = store
+      .list('Finding', p.id)
+      .filter((f) => f.input_revision === p.input_revision && f.category === 'CREDENTIAL_EXPOSURE');
+    const scopeComplete =
+      job.kind === 'rescan_repository'
+        ? await repositoryScopeComplete(
+            {
+              ...previousInputs,
+              manifest: [
+                ...previousInputs.manifest,
+                ...priorFindings
+                  .filter(
+                    (f) =>
+                      f.location.kind === 'file' &&
+                      !previousInputs.manifest.some(
+                        (m) => f.location.kind === 'file' && m.path === f.location.path,
+                      ),
+                  )
+                  .map((f) => ({
+                    path: f.location.kind === 'file' ? f.location.path : '',
+                    kind: 'source' as const,
+                    bytes: 0,
+                  })),
+              ],
+            },
+            imported.inputs,
+            imported.report,
+            request,
+          )
+        : false;
+    if (job.kind === 'rescan_repository' && !scopeComplete) {
+      const paths = [
+        ...previousInputs.manifest.map((f) => f.path),
+        ...priorFindings.flatMap((f) => (f.location.kind === 'file' ? [f.location.path] : [])),
+      ];
+      for (const path of new Set(paths))
+        if (
+          !imported.inputs.manifest.some((f) => f.path === path) &&
+          !imported.report.exclusions.some((e) => e.path === path)
+        )
+          imported.report.exclusions.push({ path, reason: 'rescan_scope_gap', bytes: null });
+    }
+    const comparison =
+      job.kind === 'rescan_repository' && scopeComplete
+        ? compareStaticRescan(
+            priorFindings,
+            store.list('CredentialFingerprint', p.id),
+            imported.inputs,
+            p.input_revision + 1,
+          )
+        : null;
     store.transaction(() => {
+      if (job.kind === 'rescan_repository') {
+        p = { ...p, input_revision: p.input_revision + 1 };
+        inputs = imported.inputs;
+        inputs.expectation_edits = store
+          .list('Expectation', p.id)
+          .filter(
+            (e) =>
+              e.source === 'declared' &&
+              (!inputs.sql_analysis ||
+                inputs.sql_analysis.tables.some(
+                  (t) =>
+                    t.schema === e.resource.schema &&
+                    t.name === e.resource.table &&
+                    (!e.owner_column ||
+                      t.columns.some((c) => c.name === e.owner_column && c.type === 'uuid')),
+                )),
+          )
+          .map(
+            ({
+              resource,
+              actor,
+              operation,
+              expected,
+              owner_column,
+              team_binding,
+              intentionally_public,
+              rationale,
+            }) => ({
+              resource,
+              actor,
+              operation,
+              expected,
+              owner_column,
+              team_binding,
+              intentionally_public,
+              rationale,
+            }),
+          );
+        const updates =
+          comparison?.updates ??
+          priorFindings
+            .filter(
+              (f) =>
+                ['confirmed', 'fixed', 'fix_not_verified'].includes(f.state) ||
+                (f.location.kind === 'file' &&
+                  !imported.inputs.manifest.some(
+                    (m) => m.path === (f.location.kind === 'file' ? f.location.path : null),
+                  )),
+            )
+            .map((f) => ({
+              ...f,
+              revision: f.revision + 1,
+              input_revision: p.input_revision,
+              state: f.state === 'fixed' ? ('fix_not_verified' as const) : f.state,
+              retest_result: null,
+              context: {
+                ...f.context,
+                limitations: [
+                  ...f.context.limitations.slice(0, 498),
+                  'Rescan coverage is incomplete; removal from the prior scope was not established',
+                ],
+              },
+            }));
+        updates.forEach((f) => save(store, f));
+        if (comparison) store.put('ScanReport', comparison.report.id, p.id, comparison.report);
+        for (const patch of store
+          .list('MigrationPatch', p.id)
+          .filter((p) => p.status !== 'superseded'))
+          store.put(
+            'MigrationPatch',
+            patch.id,
+            p.id,
+            { ...patch, status: 'superseded' },
+            Date.now(),
+          );
+      }
       inputs = imported.inputs;
       store.setInputs(p.id, inputs);
       p = { ...p, admitted_schema_digest: inputs.schema_sql ? hash(inputs.schema_sql) : null };
       store.saveProject(p);
-      inputs.credential_findings.forEach((f) => save(store, f));
+      inputs.credential_findings.forEach((f) => {
+        const fp = inputs.credential_fingerprints.find((x) => x.finding_id === f.id)?.fingerprint;
+        const same =
+          job.kind === 'rescan_repository' &&
+          priorFindings.some(
+            (old) =>
+              old.location.kind === 'file' &&
+              f.location.kind === 'file' &&
+              old.location.path === f.location.path &&
+              ['confirmed', 'fixed', 'fix_not_verified'].includes(old.state) &&
+              store
+                .list('CredentialFingerprint', p.id)
+                .some((x) => x.finding_id === old.id && x.fingerprint === fp),
+          );
+        if (!same) save(store, f);
+      });
       inputs.credential_fingerprints.forEach((fp) =>
         store.put('CredentialFingerprint', fp.finding_id, p.id, fp),
       );
       saveImportReport(store, imported.report);
     });
   }
+  if (job.kind === 'project_analysis') {
+    const summary = await summarizeProject(
+      store.list('Finding', p.id).filter((f) => f.input_revision === p.input_revision),
+      inputs.sql_analysis ?? null,
+      p.input_revision,
+      p.expectation_set_revision,
+      cancelled,
+      store.list('ImportReport', p.id).at(-1) ?? null,
+    );
+    cancelled();
+    store.put(
+      'ProjectSummary',
+      job.id,
+      p.id,
+      validate('ProjectSummary', { ...summary, id: job.id }),
+      2,
+    );
+    return;
+  }
   if (job.phase === 'investigate') {
     const f = store.get('Finding', payload.finding_id!);
     if (f.revision !== payload.expected_finding_revision) throw new AppError('STALE_REVISION', 409);
-    const snapshot =
-      f.category === 'RLS_MISCONFIGURATION'
-        ? (store.list('SchemaSnapshot', p.id).at(-1) ?? null)
-        : null;
+    const snapshot = f.category === 'RLS_MISCONFIGURATION' ? store.currentSnapshot(p.id) : null;
     const ai_analysis = await investigate(f, snapshot);
     cancelled();
     save(
@@ -134,7 +320,7 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
           Date.now(),
         );
     });
-  } else if (job.kind === 'scan' || job.kind === 'import') {
+  } else if (job.kind === 'scan' || job.kind === 'import' || job.kind === 'rescan_repository') {
     if (inputs.schema_sql) {
       const data = await withReplica(async (replica) => {
         await replica.apply(inputs.schema_sql);
@@ -143,22 +329,35 @@ export async function dispatch(store: Store, job: Job, payload: JobPayload): Pro
         const expectations = resolveExpectations(
           snapshot,
           inputs.expectation_edits,
-          [],
+          job.kind === 'rescan_repository' ? store.list('Expectation', p.id) : [],
           'manifest',
           p.id,
+          job.kind === 'rescan_repository',
         );
         const findings = await analyzeRls(snapshot, expectations, p.id, p.input_revision);
         if (findings.length + inputs.credential_findings.length > 500)
           throw new AppError('IMPORT_FINDING_LIMIT');
         return { snapshot, expectations, findings };
+      }).catch((error: unknown) => {
+        cancelled();
+        persistStaticReview(store, p, inputs, job.kind === 'rescan_repository');
+        throw error;
       });
       cancelled();
       store.transaction(() => {
-        store.put('SchemaSnapshot', data.snapshot.id, p.id, data.snapshot, p.input_revision);
+        store.put(
+          'SchemaSnapshot',
+          data.snapshot.id,
+          p.id,
+          { ...data.snapshot, admitted_schema_digest: hash(inputs.schema_sql) },
+          p.input_revision,
+        );
         data.expectations.forEach((e) => store.put('Expectation', e.id, p.id, e, e.revision));
         data.findings.forEach((f) => save(store, f));
         store.saveProject({ ...p, expectation_set_revision: p.expectation_set_revision + 1 });
       });
+    } else if (inputs.sql_analysis?.tables.length) {
+      persistStaticReview(store, p, inputs, job.kind === 'rescan_repository');
     }
   } else if (job.kind === 'verify') {
     const expectations = store.list('Expectation', p.id);
@@ -315,9 +514,17 @@ export async function runNext(store: Store): Promise<boolean> {
       job.status = 'succeeded';
       job.progress.completed = 1;
       store.updateJob(job);
+      if (
+        (job.kind === 'import' ||
+          (job.kind === 'scan' && job.phase !== 'investigate') ||
+          job.kind === 'rescan_credentials' ||
+          job.kind === 'rescan_repository') &&
+        store.inputs(job.project_id)
+      )
+        enqueueAutomaticAnalysis(store, job.project_id);
     }
   } catch (error) {
-    if (job.kind === 'import') {
+    if (job.kind === 'import' || job.kind === 'rescan_repository') {
       const report = store.get('ImportReport', job.id);
       saveImportReport(store, {
         ...report,
@@ -334,7 +541,27 @@ export async function runNext(store: Store): Promise<boolean> {
       job.error_code = errorCode(error);
       store.updateJob(job);
     }
+    if (
+      (job.kind === 'import' ||
+        job.kind === 'rescan_repository' ||
+        (job.kind === 'scan' && job.phase !== 'investigate')) &&
+      store.job(job.id).status === 'failed' &&
+      store.inputs(job.project_id).sql_analysis &&
+      store.get('Project', job.project_id).expectation_set_revision >
+        payload.expectation_set_revision
+    )
+      enqueueAutomaticAnalysis(store, job.project_id);
     const f = payload.finding_id ? store.get('Finding', payload.finding_id) : null;
+    if (job.kind === 'project_analysis') {
+      const pending = store.get('ProjectSummary', job.id);
+      store.put(
+        'ProjectSummary',
+        job.id,
+        job.project_id,
+        { ...pending, status: 'unavailable', reason_code: errorCode(error) },
+        2,
+      );
+    }
     if (f && f.state === 'fix_not_verified')
       save(
         store,

@@ -88,3 +88,35 @@ it('queues different projects but permits only one running job across worker cla
     s.close();
   }
 });
+
+it('exposes a catalogue only for the same admitted SQL digest', () => {
+  const s = new Store(':memory:');
+  const now = new Date().toISOString();
+  const p = validate('Project', {
+    id: 'snapshot_scope',
+    name: 'scope',
+    input_revision: 1,
+    expectation_set_revision: 0,
+    admitted_schema_digest: 'a'.repeat(64),
+    created_at: now,
+    expires_at: now,
+  });
+  try {
+    s.saveProject(p);
+    const snapshot = {
+      id: 'catalogue',
+      digest: 'c'.repeat(64),
+      tables: [],
+      postgres_version: '17',
+      admitted_schema_digest: 'a'.repeat(64),
+    };
+    s.put('SchemaSnapshot', snapshot.id, p.id, snapshot);
+    expect(s.currentSnapshot(p.id)?.id).toBe(snapshot.id);
+    s.saveProject({ ...p, input_revision: 2, admitted_schema_digest: 'b'.repeat(64) });
+    expect(s.currentSnapshot(p.id)).toBeNull();
+    s.saveProject({ ...p, input_revision: 3 });
+    expect(s.currentSnapshot(p.id)?.id).toBe(snapshot.id);
+  } finally {
+    s.close();
+  }
+});

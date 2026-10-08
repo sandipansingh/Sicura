@@ -4,6 +4,7 @@ import { newId } from '../../../packages/core/src/hash';
 import { redactValue } from '../../../packages/core/src/secrets/sink';
 import { exportMarkdown, exportMigration } from '../../../packages/core/src/remediation/export';
 import { checkHost, checkMutation, session, readJson, idempotency } from './security';
+import { enqueueRepositoryRescan } from '../../../packages/store/src/repository-rescan';
 import { enqueueImport, retryImport } from '../../../packages/store/src/imports';
 import {
   store,
@@ -12,6 +13,7 @@ import {
   upload,
   verifyProject,
   investigateFinding,
+  investigateProject,
   proposePatch,
   approve,
   editExpectations,
@@ -84,6 +86,18 @@ export async function handle(request: Request, path: string[]): Promise<Response
         return json(
           'JobEnvelope',
           await upload(id, await readJson(request), idempotency(request)),
+          202,
+        );
+      else if (action === 'investigate' && method === 'POST')
+        return json(
+          'JobEnvelope',
+          investigateProject(id, await readJson(request), idempotency(request)),
+          202,
+        );
+      else if (action === 'rescan-repository' && method === 'POST')
+        return json(
+          'JobEnvelope',
+          enqueueRepositoryRescan(store, id, await readJson(request), idempotency(request)),
           202,
         );
       else if (action === 'verify' && method === 'POST')

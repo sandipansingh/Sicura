@@ -33,6 +33,7 @@ export function resolveExpectations(
   prior: Expectation[] = [],
   origin: 'manifest' | 'user' = 'manifest',
   project_id = 'standalone',
+  refresh = false,
 ): Expectation[] {
   const seen = new Set<string>();
   for (const e of edits) {
@@ -57,7 +58,7 @@ export function resolveExpectations(
         const key = tuple({ resource, actor, operation });
         const edit = edits.find((e) => tuple(e) === key);
         const previous = prior.find((e) => tuple(e) === key);
-        if (!edit && previous) {
+        if (!edit && previous && !refresh) {
           result.push(previous);
           continue;
         }

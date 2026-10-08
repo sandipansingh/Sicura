@@ -21,6 +21,7 @@ export function errorCode(error: unknown): string {
       'EVIDENCE_INVALID',
       'CONFIRMATION_INVALID',
       'FIX_INVALID',
+      'STATIC_EVIDENCE_INVALID',
     ].includes(error.message)
   )
     return error.message;

@@ -61,6 +61,22 @@ export class Store {
       .all(...(project_id ? [kind, project_id] : [kind])) as { body: string }[];
     return rows.map((r) => validate(kind, parseStrictJson(r.body, 16 * 1024 * 1024)));
   }
+  currentSnapshot(project_id: string): ContractMap['SchemaSnapshot'] | null {
+    const p = this.get('Project', project_id);
+    if (!p.admitted_schema_digest) return null;
+    return (
+      this.list('SchemaSnapshot', project_id)
+        .reverse()
+        .find((snapshot) => {
+          if (snapshot.admitted_schema_digest)
+            return snapshot.admitted_schema_digest === p.admitted_schema_digest;
+          const row = this.db
+            .prepare('SELECT MAX(revision) AS revision FROM records WHERE kind=? AND id=?')
+            .get('SchemaSnapshot', snapshot.id) as { revision: number };
+          return row.revision === p.input_revision;
+        }) ?? null
+    );
+  }
   saveProject(p: Project): void {
     const row = this.db
       .prepare('SELECT MAX(revision) AS revision FROM records WHERE kind=? AND id=?')
@@ -189,6 +205,16 @@ export class Store {
       if (job.status === 'queued') job.status = 'cancelled';
       job.error_code = 'CANCELLED';
       this.updateJob(job);
+      if (job.kind === 'project_analysis' && job.status === 'cancelled') {
+        const summary = this.get('ProjectSummary', id);
+        this.put(
+          'ProjectSummary',
+          id,
+          job.project_id,
+          { ...summary, status: 'unavailable', reason_code: 'CANCELLED' },
+          2,
+        );
+      }
       return job;
     });
   }
@@ -198,7 +224,17 @@ export class Store {
         j.status = j.error_code === 'CANCELLED' ? 'cancelled' : 'failed';
         if (j.error_code !== 'CANCELLED') j.error_code = 'WORKER_INTERRUPTED';
         this.updateJob(j);
-        if (j.kind === 'import') {
+        if (j.kind === 'project_analysis') {
+          const summary = this.get('ProjectSummary', j.id);
+          this.put(
+            'ProjectSummary',
+            j.id,
+            j.project_id,
+            { ...summary, status: 'unavailable', reason_code: j.error_code },
+            2,
+          );
+        }
+        if (j.kind === 'import' || j.kind === 'rescan_repository') {
           const report = this.get('ImportReport', j.id);
           const row = this.db
             .prepare('SELECT MAX(revision) AS revision FROM records WHERE kind=? AND id=?')

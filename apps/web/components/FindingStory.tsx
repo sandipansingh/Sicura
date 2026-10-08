@@ -55,7 +55,7 @@ export default function FindingStory({
             : 'Static Evidence'}
         </h2>
         <p>{finding.source.rule_ids.join(' · ')}</p>
-        {finding.evidence.kind === 'rls' ? (
+        {finding.evidence.kind !== 'credential' ? (
           <>
             <pre>{finding.evidence.policy_condition}</pre>
             <p>{finding.evidence.grant_summary}</p>

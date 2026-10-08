@@ -10,12 +10,14 @@ type Api = <K extends keyof ContractMap>(
   body?: unknown,
 ) => Promise<ContractMap[K]>;
 export default function RepositoryImport({
+  hideForm = false,
   busy,
   reports,
   api,
   action,
   onProject,
 }: {
+  hideForm?: boolean;
   busy: boolean;
   reports: ImportReport[];
   api: Api;
@@ -28,43 +30,47 @@ export default function RepositoryImport({
   const report = reports.at(-1);
   return (
     <section className={styles.panel}>
-      <h2>Import project</h2>
-      <p>
-        Read one pinned commit. Discover source and migrations without running the project. Private
-        access uses your existing GitHub CLI login.
-      </p>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void action(async () => {
-            const result = await api('imports', 'ImportStatus', 'POST', {
-              source: { kind: 'github', url: url.trim(), ref: null },
-              selection: null,
-              retry_of: null,
-            });
-            setUrl('');
-            setRoot('');
-            setOrder('');
-            await onProject(result.job.project_id);
-          });
-        }}
-      >
-        <label>
-          GitHub repository URL{' '}
-          <input
-            aria-label="GitHub repository URL"
-            type="url"
-            value={url}
-            onChange={(event) => setUrl(event.target.value)}
-            placeholder="https://github.com/owner/repository"
-            required
-            disabled={busy}
-          />
-        </label>{' '}
-        <button type="submit" disabled={busy || !url.trim()}>
-          Import project
-        </button>
-      </form>
+      {!hideForm && (
+        <>
+          <h2>Import project</h2>
+          <p>
+            Read one pinned commit. Discover source and migrations without running the project.
+            Private access uses your existing GitHub CLI login.
+          </p>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void action(async () => {
+                const result = await api('imports', 'ImportStatus', 'POST', {
+                  source: { kind: 'github', url: url.trim(), ref: null },
+                  selection: null,
+                  retry_of: null,
+                });
+                setUrl('');
+                setRoot('');
+                setOrder('');
+                await onProject(result.job.project_id);
+              });
+            }}
+          >
+            <label>
+              GitHub repository URL{' '}
+              <input
+                aria-label="GitHub repository URL"
+                type="url"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder="https://github.com/owner/repository"
+                required
+                disabled={busy}
+              />
+            </label>{' '}
+            <button type="submit" disabled={busy || !url.trim()}>
+              Import project
+            </button>
+          </form>
+        </>
+      )}
       {report && (
         <div aria-live="polite">
           <h3>Repository coverage</h3>

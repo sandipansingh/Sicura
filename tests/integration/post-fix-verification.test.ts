@@ -46,6 +46,9 @@ it('reopens a fixed finding when ordinary verification replays the vulnerable sc
     const scan = store.enqueue(project, 'scan', 'replica', 'scan', payload());
     await runNext(store);
     expect(store.job(scan.id).status).toBe('succeeded');
+    const summary = store.jobs(project.id).find((j) => j.kind === 'project_analysis')!;
+    expect(summary.status).toBe('queued');
+    store.cancelJob(summary.id); // Independent replica verification remains usable after advisory cancellation.
     const baselineJob = store.enqueue(
       store.get('Project', project.id),
       'verify',

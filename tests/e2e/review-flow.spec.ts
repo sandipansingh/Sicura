@@ -103,6 +103,7 @@ test('flagship: real replica confirmation, human approval, identical retest and 
   await expect(page.locator('pre').filter({ hasText: '[REDACTED]' })).toBeVisible();
   await expect(page.getByText('Validity was not tested.', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Project', exact: true }).click();
+  await page.locator('summary').filter({ hasText: 'Rescan complete source scope' }).click();
   await page.getByLabel('This path was deleted').check();
   await page
     .getByLabel('These files and deletions describe the complete submitted source scope')

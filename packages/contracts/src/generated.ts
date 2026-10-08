@@ -81,7 +81,16 @@ export type UrnProofsecContracts10 =
   | ImportReport
   | ImportStatus
   | GithubTree
-  | RuntimeState;
+  | RuntimeState
+  | SQLDiagnostic
+  | SQLTable
+  | SQLPolicy
+  | SQLGrant
+  | SQLAnalysis
+  | SqlRlsEvidence
+  | ProjectSummaryOutput
+  | ProjectSummary
+  | ProjectInvestigateRequest;
 export type FindingState =
   | "needs_expectation"
   | "suspected"
@@ -520,7 +529,7 @@ export interface Finding {
   severity_basis: string;
   confidence: Confidence;
   source: {
-    kind: "catalog" | "source_scan";
+    kind: "catalog" | "source_scan" | "sql_ast";
     analyzer_version: string;
     /**
      * @maxItems 500
@@ -528,7 +537,7 @@ export interface Finding {
     rule_ids: string[];
   };
   location: Location;
-  evidence: RlsEvidence | CredentialEvidence;
+  evidence: RlsEvidence | CredentialEvidence | SqlRlsEvidence;
   context: {
     table_classification: ("user_owned" | "public_read" | "shared_team" | "unknown") | null;
     /**
@@ -570,6 +579,25 @@ export interface Finding {
     fixed_at: string | null;
   };
 }
+export interface SqlRlsEvidence {
+  kind: "rls_static";
+  id: string;
+  /**
+   * @maxItems 500
+   */
+  rule_ids: string[];
+  operation: "SELECT" | "INSERT" | "UPDATE" | "DELETE";
+  role: "authenticated" | "anon";
+  rls_enabled: boolean | null;
+  force_rls: boolean | null;
+  /**
+   * @maxItems 500
+   */
+  policy_names: string[];
+  policy_condition: string;
+  grant_summary: string;
+  snapshot_id: string;
+}
 export interface ExpectationManifest {
   schema_version: "1.0";
   /**
@@ -589,7 +617,15 @@ export interface Project {
 export interface Job {
   id: string;
   project_id: string;
-  kind: "scan" | "verify" | "retest" | "rescan_credentials" | "evaluate" | "import";
+  kind:
+    | "scan"
+    | "verify"
+    | "retest"
+    | "rescan_credentials"
+    | "evaluate"
+    | "import"
+    | "project_analysis"
+    | "rescan_repository";
   phase:
     "intake" | "analyze" | "investigate" | "replica" | "seed" | "verify" | "apply" | "retest" | "report" | "cleanup";
   status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
@@ -742,6 +778,7 @@ export interface SchemaSnapshot {
    */
   tables: Table[];
   postgres_version: string;
+  admitted_schema_digest?: string;
 }
 export interface AdmittedInputs {
   schema_sql: string;
@@ -766,10 +803,83 @@ export interface AdmittedInputs {
    * @maxItems 500
    */
   credential_fingerprints: CredentialFingerprint[];
+  sql_analysis?: SQLAnalysis;
 }
 export interface CredentialFingerprint {
   finding_id: string;
   fingerprint: string;
+}
+export interface SQLAnalysis {
+  id: string;
+  input_revision: number;
+  complete: boolean;
+  replay_ready: boolean;
+  replay_reason: string | null;
+  statements: number;
+  /**
+   * @maxItems 50
+   */
+  tables: SQLTable[];
+  /**
+   * @maxItems 500
+   */
+  policies: SQLPolicy[];
+  /**
+   * @maxItems 2000
+   */
+  grants: SQLGrant[];
+  /**
+   * @maxItems 2000
+   */
+  diagnostics: SQLDiagnostic[];
+  created_at: string;
+}
+export interface SQLTable {
+  schema: string;
+  name: string;
+  rls_enabled: boolean | null;
+  /**
+   * @maxItems 2000
+   */
+  columns: {
+    name: string;
+    type: string;
+    owner_fk: boolean;
+  }[];
+}
+export interface SQLPolicy {
+  schema: string;
+  table: string;
+  name: string;
+  operation: "SELECT" | "INSERT" | "UPDATE" | "DELETE" | "ALL";
+  /**
+   * @maxItems 100
+   */
+  roles: string[];
+  permissive: boolean;
+  broad_using: boolean | null;
+  broad_check: boolean | null;
+  /**
+   * @maxItems 100
+   */
+  helpers: string[];
+  path: string;
+  line: number;
+}
+export interface SQLGrant {
+  schema: string;
+  table: string;
+  role: string;
+  operation: "SELECT" | "INSERT" | "UPDATE" | "DELETE";
+  granted: boolean;
+}
+export interface SQLDiagnostic {
+  path: string;
+  line: number;
+  statement: number;
+  code: string;
+  construct: string;
+  message: string;
 }
 export interface JobPayload {
   finding_id: string | null;
@@ -847,6 +957,8 @@ export interface ProjectView {
    * @maxItems 500
    */
   imports?: ImportReport[];
+  sql_analysis?: SQLAnalysis | null;
+  summary?: ProjectSummary | null;
 }
 export interface ImportReport {
   id: string;
@@ -903,7 +1015,8 @@ export interface ImportExclusion {
     | "unsupported_encoding"
     | "unsupported_file"
     | "missing"
-    | "unsafe_path";
+    | "unsafe_path"
+    | "rescan_scope_gap";
   bytes: number | null;
 }
 export interface ImportRoot {
@@ -915,6 +1028,37 @@ export interface ImportRoot {
   files: string[];
   ordered: boolean;
   complete: boolean;
+}
+export interface ProjectSummary {
+  id: string;
+  input_revision: number;
+  expectation_set_revision: number;
+  status: "available" | "unavailable" | "pending";
+  model: string;
+  model_digest: string;
+  prompt_version: string;
+  output: ProjectSummaryOutput | null;
+  reason_code: string | null;
+  duration_ms: number;
+  created_at: string;
+}
+export interface ProjectSummaryOutput {
+  summary: string;
+  /**
+   * @maxItems 5
+   */
+  priorities: {
+    finding_id: string;
+    explanation: string;
+  }[];
+  /**
+   * @maxItems 10
+   */
+  limitations: string[];
+  /**
+   * @maxItems 5
+   */
+  next_steps: string[];
 }
 export interface FindingView {
   finding: Finding;
@@ -1329,4 +1473,8 @@ export interface GithubTree {
 export interface RuntimeState {
   pid: number;
   port: number;
+}
+export interface ProjectInvestigateRequest {
+  input_revision: number;
+  expectation_set_revision: number;
 }

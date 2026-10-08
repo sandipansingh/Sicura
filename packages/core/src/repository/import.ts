@@ -7,6 +7,7 @@ import {
 import { hash } from '../hash';
 import { createHmac } from 'node:crypto';
 import { AppError, errorCode } from '../errors';
+import { analyzeSqlFiles } from '../rls/sql-analysis';
 import { admitSql } from '../intake/admit';
 import { credentialFindings } from '../secrets/findings';
 import { redactValue } from '../secrets/sink';
@@ -151,6 +152,22 @@ export async function importRepository(
   report.selected_root = choice.root?.path ?? null;
   report.sql_order = choice.order;
   let schema_sql = '';
+  const sql_analysis = choice.root
+    ? await analyzeSqlFiles(
+        choice.order
+          .filter((p) => files.some((f) => f.path === p))
+          .map((p) => files.find((f) => f.path === p)!),
+        initial.input_revision,
+      )
+    : undefined;
+  if (sql_analysis && !choice.root?.complete) {
+    sql_analysis.complete = false;
+    sql_analysis.tables.forEach((t) => {
+      t.rls_enabled = null;
+    });
+    sql_analysis.replay_ready = false;
+    sql_analysis.replay_reason = 'IMPORT_MIGRATION_GAP';
+  }
   if (!report.roots.length)
     report.rls = { status: 'missing_schema', reason_code: 'SCHEMA_MISSING' };
   else if (!choice.root)
@@ -174,6 +191,7 @@ export async function importRepository(
   return {
     inputs: validate('AdmittedInputs', {
       schema_sql,
+      ...(sql_analysis ? { sql_analysis } : {}),
       // Snippet extraction/markers can expose another syntactic assignment span.
       // Sanitize metadata again before its sink, never redact executable SQL.
       ...redactValue({

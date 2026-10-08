@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 import lock from '../config/runtime-lock.json';
 import { makeReport } from '../eval/harness/runtime';
 
-const artifact = resolve(process.argv[2] ?? '.local/artifacts/sicura-0.2.0.tgz');
+const artifact = resolve(process.argv[2] ?? '.local/artifacts/sicura-0.3.0.tgz');
 const dir = await mkdtemp(join(tmpdir(), 'proofsec-consumer-gate-'));
 const consumer = join(dir, 'consumer');
 const workspace = join(dir, 'workspace');
@@ -85,8 +85,9 @@ try {
   await expect(page.getByRole('button', { name: 'Evaluation', exact: true })).toHaveCount(0);
   await expect(page.getByText(/flagship|demo/i)).toHaveCount(0);
   await expect(page.getByText(/Supported SQL admitted/)).toBeVisible({ timeout: 45000 });
+  await expect(page.getByLabel('Schema and source files', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Run local verification' })).toBeEnabled({
-    timeout: 45000,
+    timeout: 90000,
   });
   const screenshots = resolve('.local/ui-review/release-installed');
   await mkdir(screenshots, { recursive: true });
@@ -128,6 +129,9 @@ try {
     validate('ApiError', parseStrictJson(await removedPost.text())).error.code !== 'NOT_FOUND'
   )
     throw new Error('CONSUMER_RELEASE_ENDPOINT_INVALID');
+  await expect(
+    page.getByRole('button', { name: 'Run local verification', exact: true }),
+  ).toBeEnabled({ timeout: 90000 });
   const view = validate(
     'ProjectView',
     parseStrictJson(
@@ -135,6 +139,8 @@ try {
       16 * 1024 * 1024,
     ),
   );
+  if (view.summary?.status !== 'available' || !view.summary.output)
+    throw new Error('CONSUMER_PROJECT_SUMMARY_UNAVAILABLE');
   if (view.jobs.filter((j) => j.kind === 'import').length !== 1)
     throw new Error('CONSUMER_DUPLICATE_IMPORT');
   const importedExpectation = view.expectations.find(
@@ -264,6 +270,7 @@ try {
       .update(await readFile(artifact))
       .digest('hex'),
     duration_ms: performance.now() - started,
+    project_summary_duration_ms: view.summary.duration_ms,
     hardware: {
       platform: process.platform,
       arch: arch(),
@@ -283,6 +290,7 @@ try {
       'Sicura package/bin/help/NOTICE and production dashboard branding',
       'release navigation and absent demo/evaluation endpoints',
       'compiled CLI-to-production-dashboard import',
+      'automatic live Gemma project summary; imported projects omit manual upload',
       'refresh/idempotency',
       'declared expectation',
       'live Gemma',

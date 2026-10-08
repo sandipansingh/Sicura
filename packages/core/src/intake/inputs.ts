@@ -1,6 +1,7 @@
 import type { AdmittedInputs, InputRequest } from '../../../contracts/src/index';
 import { validate } from '../../../contracts/src/index';
 import { admitPath, admitSql } from './admit';
+import { analyzeSqlFiles } from '../rls/sql-analysis';
 import { AppError } from '../errors';
 import { credentialFindings } from '../secrets/findings';
 
@@ -46,27 +47,30 @@ export async function admitInputs(
     throw new AppError('INPUT_ORDER_INVALID');
   // One parser/allowlist checks the complete ordered schema atomically.
   const joined = input.sql_order.map((p) => sqlFiles.find((f) => f.path === p)!.content).join('\n');
-  const schema_sql = joined ? await admitSql(joined) : '';
+  const sql_analysis = await analyzeSqlFiles(
+    input.sql_order.map((p) => sqlFiles.find((f) => f.path === p)!),
+    revision,
+  );
+  const schema_sql = sql_analysis.replay_ready ? await admitSql(joined) : '';
   const credential_fingerprints: AdmittedInputs['credential_fingerprints'] = [];
-  const credential_findings = input.files
-    .filter((f) => f.kind === 'source')
-    .flatMap((f) =>
-      credentialFindings(
-        f.path,
-        f.content,
-        project_id,
-        revision,
-        projectKey
-          ? {
-              key: projectKey,
-              capture: (finding_id, fingerprint) =>
-                credential_fingerprints.push({ finding_id, fingerprint }),
-            }
-          : undefined,
-      ),
-    );
+  const credential_findings = input.files.flatMap((f) =>
+    credentialFindings(
+      f.path,
+      f.content,
+      project_id,
+      revision,
+      projectKey
+        ? {
+            key: projectKey,
+            capture: (finding_id, fingerprint) =>
+              credential_fingerprints.push({ finding_id, fingerprint }),
+          }
+        : undefined,
+    ),
+  );
   return validate('AdmittedInputs', {
     schema_sql,
+    sql_analysis,
     expectation_edits: input.expectations?.expectations ?? [],
     manifest: input.files.map((f) => ({
       path: f.path,

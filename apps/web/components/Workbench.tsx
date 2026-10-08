@@ -29,6 +29,7 @@ export default function Workbench() {
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [working, setWorking] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
   const [showSuppressed, setShowSuppressed] = useState(false);
   const [run, setRun] = useState<RunResponse | null>(null);
   const [edits, setEdits] = useState<ExpectationEdit[]>([]);
@@ -108,7 +109,8 @@ export default function Workbench() {
         }
         if (p) await refresh(p.id);
       })
-      .catch(() => setError('Project loading failed'));
+      .catch(() => setError('Project loading failed'))
+      .finally(() => setLoadingProjects(false));
   }, [csrf]);
   useEffect(() => {
     const id = view?.project.id ?? null;
@@ -129,7 +131,10 @@ export default function Workbench() {
     return () => clearInterval(timer);
   }, [view?.project.id, view?.jobs]);
   const busy =
-    working || !csrf || !!view?.jobs.some((j) => j.status === 'running' || j.status === 'queued');
+    working ||
+    loadingProjects ||
+    !csrf ||
+    !!view?.jobs.some((j) => j.status === 'running' || j.status === 'queued');
   const finding = view?.findings.find((f) => f.id === selected) ?? null;
   const patch = view?.patches.find((p) => p.id === finding?.remediation.patch_id);
   const active = view?.jobs.find((j) => j.status === 'running' || j.status === 'queued');
@@ -249,6 +254,15 @@ export default function Workbench() {
               </button>
             )}
           </div>
+          {view && !view.snapshot && tab !== 'Project' && (
+            <p className={styles.notice}>
+              Replica verification unavailable:{' '}
+              {view.sql_analysis?.replay_reason ??
+                view.imports?.at(-1)?.rls.reason_code ??
+                'SCHEMA_MISSING'}
+              . Review SQL diagnostics in Project. Static analysis is not an access observation.
+            </p>
+          )}
           {error && (
             <p role="alert" className={styles.error}>
               {error}
@@ -266,8 +280,13 @@ export default function Workbench() {
               Job {j.id}: {j.error_code}. No access conclusion from this job.
             </p>
           ))}
-          {tab === 'Project' && (
+          {loadingProjects && <p role="status">Loading local projects…</p>}
+          {tab === 'Project' && !loadingProjects && (
             <ProjectPanel
+              onFinding={(id) => {
+                setTab('Findings');
+                setSelected(id);
+              }}
               busy={busy}
               api={api}
               load={load}

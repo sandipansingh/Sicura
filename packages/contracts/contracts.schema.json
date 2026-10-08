@@ -1730,7 +1730,7 @@
           "required": ["kind", "analyzer_version", "rule_ids"],
           "properties": {
             "kind": {
-              "enum": ["catalog", "source_scan"]
+              "enum": ["catalog", "source_scan", "sql_ast"]
             },
             "analyzer_version": {
               "type": "string",
@@ -1756,6 +1756,9 @@
             },
             {
               "$ref": "#/$defs/CredentialEvidence"
+            },
+            {
+              "$ref": "#/$defs/SqlRlsEvidence"
             }
           ]
         },
@@ -2060,7 +2063,16 @@
           "pattern": "^[A-Za-z0-9_-]{1,128}$"
         },
         "kind": {
-          "enum": ["scan", "verify", "retest", "rescan_credentials", "evaluate", "import"]
+          "enum": [
+            "scan",
+            "verify",
+            "retest",
+            "rescan_credentials",
+            "evaluate",
+            "import",
+            "project_analysis",
+            "rescan_repository"
+          ]
         },
         "phase": {
           "enum": [
@@ -2620,6 +2632,10 @@
         "postgres_version": {
           "type": "string",
           "maxLength": 4000
+        },
+        "admitted_schema_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       }
     },
@@ -2684,6 +2700,9 @@
             "$ref": "#/$defs/CredentialFingerprint"
           },
           "maxItems": 500
+        },
+        "sql_analysis": {
+          "$ref": "#/$defs/SQLAnalysis"
         }
       }
     },
@@ -2884,6 +2903,26 @@
             "$ref": "#/$defs/ImportReport"
           },
           "maxItems": 500
+        },
+        "sql_analysis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SQLAnalysis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "summary": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -4275,7 +4314,8 @@
             "unsupported_encoding",
             "unsupported_file",
             "missing",
-            "unsafe_path"
+            "unsafe_path",
+            "rescan_scope_gap"
           ]
         },
         "bytes": {
@@ -4579,6 +4619,487 @@
           "type": "integer",
           "minimum": 1024,
           "maximum": 65535
+        }
+      }
+    },
+    "SQLDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line", "statement", "code", "construct", "message"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "statement": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "construct": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "SQLTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "name", "rls_enabled", "columns"],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "rls_enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "type", "owner_fk"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 63
+              },
+              "type": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "owner_fk": {
+                "type": "boolean"
+              }
+            }
+          },
+          "maxItems": 2000
+        }
+      }
+    },
+    "SQLPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "table",
+        "name",
+        "operation",
+        "roles",
+        "permissive",
+        "broad_using",
+        "broad_check",
+        "helpers",
+        "path",
+        "line"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "table": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "operation": {
+          "enum": ["SELECT", "INSERT", "UPDATE", "DELETE", "ALL"]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 63
+          },
+          "maxItems": 100
+        },
+        "permissive": {
+          "type": "boolean"
+        },
+        "broad_using": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "broad_check": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "helpers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "maxItems": 100
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "SQLGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "table", "role", "operation", "granted"],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "table": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 63
+        },
+        "operation": {
+          "enum": ["SELECT", "INSERT", "UPDATE", "DELETE"]
+        },
+        "granted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SQLAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input_revision",
+        "complete",
+        "replay_ready",
+        "replay_reason",
+        "statements",
+        "tables",
+        "policies",
+        "grants",
+        "diagnostics",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "input_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "replay_ready": {
+          "type": "boolean"
+        },
+        "replay_reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "statements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SQLTable"
+          },
+          "maxItems": 50
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SQLPolicy"
+          },
+          "maxItems": 500
+        },
+        "grants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SQLGrant"
+          },
+          "maxItems": 2000
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SQLDiagnostic"
+          },
+          "maxItems": 2000
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "SqlRlsEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id",
+        "rule_ids",
+        "operation",
+        "role",
+        "rls_enabled",
+        "force_rls",
+        "policy_names",
+        "policy_condition",
+        "grant_summary",
+        "snapshot_id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "rls_static"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$"
+          },
+          "maxItems": 500
+        },
+        "operation": {
+          "enum": ["SELECT", "INSERT", "UPDATE", "DELETE"]
+        },
+        "role": {
+          "enum": ["authenticated", "anon"]
+        },
+        "rls_enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "force_rls": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "policy_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63
+          },
+          "maxItems": 500
+        },
+        "policy_condition": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "grant_summary": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "snapshot_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        }
+      }
+    },
+    "ProjectSummaryOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "priorities", "limitations", "next_steps"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "maxLength": 1600
+        },
+        "priorities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["finding_id", "explanation"],
+            "properties": {
+              "finding_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,128}$"
+              },
+              "explanation": {
+                "type": "string",
+                "maxLength": 800
+              }
+            }
+          },
+          "maxItems": 5
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 400
+          },
+          "maxItems": 10
+        },
+        "next_steps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 400
+          },
+          "maxItems": 5
+        }
+      }
+    },
+    "ProjectSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input_revision",
+        "expectation_set_revision",
+        "status",
+        "model",
+        "model_digest",
+        "prompt_version",
+        "output",
+        "reason_code",
+        "duration_ms",
+        "created_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "input_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectation_set_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": ["available", "unavailable", "pending"]
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "model_digest": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "prompt_version": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "output": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectSummaryOutput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,128}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ProjectInvestigateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_revision", "expectation_set_revision"],
+      "properties": {
+        "input_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expectation_set_revision": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }

@@ -12,7 +12,7 @@ export const SYSTEM_PROMPT =
 export function modelInput(f: Finding): GemmaInput {
   const database = f.location.kind === 'database';
   const fact =
-    f.evidence.kind === 'rls'
+    f.evidence.kind !== 'credential'
       ? `RLS enabled: ${f.evidence.rls_enabled}; ${f.evidence.grant_summary}; ${f.evidence.policy_condition}`
       : `${f.evidence.credential_type}; ${f.evidence.classification}; ${f.evidence.exposure}; validity not tested`;
   return validate('GemmaInput', {
@@ -49,22 +49,27 @@ export function modelInput(f: Finding): GemmaInput {
           source: f.expectation.source,
         }
       : null,
-    allowed_test_ids: database
-      ? TEST_IDS.filter(
-          (id) =>
-            id === 'rls.own_row_access.v1' ||
-            (f.expectation?.actor === 'anon'
-              ? id === 'rls.anon_access.v1'
-              : {
-                  SELECT: ['rls.cross_user_read.v1'],
-                  INSERT: ['rls.insert_as_other.v1'],
-                  UPDATE: ['rls.cross_user_update.v1', 'rls.reassign_owner.v1'],
-                  DELETE: ['rls.cross_user_delete.v1'],
-                }[f.location.kind === 'database' ? f.location.operation : 'SELECT'].includes(id)),
-        )
-      : [],
+    allowed_test_ids:
+      database && f.source.kind !== 'sql_ast'
+        ? TEST_IDS.filter(
+            (id) =>
+              id === 'rls.own_row_access.v1' ||
+              (f.expectation?.actor === 'anon'
+                ? id === 'rls.anon_access.v1'
+                : {
+                    SELECT: ['rls.cross_user_read.v1'],
+                    INSERT: ['rls.insert_as_other.v1'],
+                    UPDATE: ['rls.cross_user_update.v1', 'rls.reassign_owner.v1'],
+                    DELETE: ['rls.cross_user_delete.v1'],
+                  }[f.location.kind === 'database' ? f.location.operation : 'SELECT'].includes(id)),
+          )
+        : [],
     limitations: [
-      'Local replica; synthetic data; production behavior is untested',
+      f.source.kind === 'sql_ast'
+        ? 'Static SQL declarations; no replica observations; production behavior is untested'
+        : f.category === 'CREDENTIAL_EXPOSURE'
+          ? 'Submitted source exposure only; credential validity and production behavior are untested'
+          : 'Local replica; synthetic data; production behavior is untested',
       ...f.context.limitations,
     ]
       .slice(0, 10)
@@ -97,9 +102,13 @@ export function generationSchema(input: GemmaInput): object {
     schema.properties.remediation_intent = { type: 'null' };
   }
   schema.properties.attack_hypothesis = hypothesis;
+  if (input.allowed_test_ids.length === 0 && input.category === 'RLS_MISCONFIGURATION') {
+    schema.properties.proposed_expectation = { type: 'null' };
+    schema.properties.remediation_intent = { type: 'null' };
+  }
   if (input.expectation?.source === 'declared')
     schema.properties.proposed_expectation = { type: 'null' };
-  if (input.category === 'RLS_MISCONFIGURATION') {
+  if (input.category === 'RLS_MISCONFIGURATION' && input.allowed_test_ids.length > 0) {
     const intent = structuredClone(schema.properties.remediation_intent) as {
       oneOf: { properties?: Record<string, unknown> }[];
     };
@@ -156,6 +165,11 @@ export function validateModelOutput(
       output.attack_hypothesis.operation
     )
       throw new AppError('AI_CREDENTIAL_ACTION_INVALID');
+  } else if (input.allowed_test_ids.length === 0) {
+    if (output.recommended_test_id || output.remediation_intent || output.proposed_expectation)
+      throw new AppError('AI_TEST_INVALID');
+    if (output.attack_hypothesis.operation !== input.operation)
+      throw new AppError('AI_OPERATION_INVALID');
   } else {
     const table = snapshot?.tables.find(
       (t) => t.schema === input.resource?.schema && t.name === input.resource?.table,
@@ -245,13 +259,15 @@ export async function investigate(
   try {
     const input = modelInput(f);
     const sourceInstruction =
-      input.expectation?.source === 'inferred'
-        ? "This case has an inferred expectation. Begin context_interpretation with 'Under the inferred expectation,' and explain that the heuristic is not a human declaration."
-        : input.expectation?.source === 'declared'
-          ? 'This case has a human-declared expectation. Distinguish the intended owner rule from the recorded current policy. Do not call the current broad branch owner-restricting.'
-          : input.expectation?.source === 'unknown'
-            ? 'This case has unknown intended access. Say unknown in context_interpretation; any proposed rule stays inactive.'
-            : 'This is static credential exposure with validity not tested. There is no access expectation; use the supplied synthetic context qualification.';
+      f.source.kind === 'sql_ast'
+        ? 'These are parsed SQL declarations, not catalogue observations. Explain uncertainty and unsupported dependencies; no replica access has been observed. If the expectation is inferred, begin context_interpretation with Under the inferred expectation. Return null for proposals, tests and remediation.'
+        : input.expectation?.source === 'inferred'
+          ? "This case has an inferred expectation. Begin context_interpretation with 'Under the inferred expectation,' and explain that the heuristic is not a human declaration."
+          : input.expectation?.source === 'declared'
+            ? 'This case has a human-declared expectation. Distinguish the intended owner rule from the recorded current policy. Do not call the current broad branch owner-restricting.'
+            : input.expectation?.source === 'unknown'
+              ? 'This case has unknown intended access. Say unknown in context_interpretation; any proposed rule stays inactive.'
+              : 'This is static credential exposure with validity not tested. There is no access expectation; do not invent synthetic or deployed context.';
     const serialized = JSON.stringify(input);
     if (Buffer.byteLength(serialized) > 24576) throw new AppError('AI_INPUT_LIMIT');
     const tags = await fetch('http://127.0.0.1:11434/api/tags', {

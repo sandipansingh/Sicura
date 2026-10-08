@@ -1,3 +1,8 @@
+import { staticExpectations, staticFindings } from '../../../packages/core/src/rls/static-findings';
+import {
+  enqueueProjectAnalysis,
+  enqueueAutomaticAnalysis,
+} from '../../../packages/store/src/project-analysis';
 import { Store } from '../../../packages/store/src/index';
 import {
   validate,
@@ -32,11 +37,23 @@ export function view(id: string): ContractMap['ProjectView'] {
         findings: store
           .list('Finding', id)
           .filter((f) => f.input_revision === project.input_revision),
-        expectations: store.list('Expectation', id),
+        expectations: store
+          .list('Expectation', id)
+          .filter((e) =>
+            store.inputs(id).sql_analysis
+              ? store
+                  .inputs(id)
+                  .sql_analysis!.tables.some(
+                    (t) => t.schema === e.resource.schema && t.name === e.resource.table,
+                  )
+              : true,
+          ),
         jobs: store.jobs(id),
         patches: store.list('MigrationPatch', id),
         runs: store.list('Run', id),
-        snapshot: store.list('SchemaSnapshot', id).at(-1) ?? null,
+        snapshot: store.currentSnapshot(id),
+        sql_analysis: project.input_revision ? (store.inputs(id).sql_analysis ?? null) : null,
+        summary: store.list('ProjectSummary', id).at(-1) ?? null,
         input_manifest: project.input_revision ? store.inputs(id).manifest : [],
         imports: store.list('ImportReport', id),
       });
@@ -83,7 +100,7 @@ export async function upload(
     const updated = validate('Project', {
       ...p,
       input_revision: p.input_revision + 1,
-      admitted_schema_digest: hash(input.schema_sql),
+      admitted_schema_digest: input.schema_sql ? hash(input.schema_sql) : null,
     });
     store.setInputs(id, input);
     store.saveProject(updated);
@@ -122,8 +139,36 @@ export async function rescanCredentials(
     store.setInputs(id, {
       ...previous,
       manifest: [...previous.manifest.filter((f) => f.kind === 'sql'), ...admitted.manifest],
-      credential_findings: admitted.credential_findings,
-      credential_fingerprints: admitted.credential_fingerprints,
+      credential_findings: [
+        ...previous.credential_findings.filter(
+          (f) =>
+            f.location.kind === 'file' &&
+            previous.manifest.some(
+              (m) =>
+                m.kind === 'sql' &&
+                m.path === (f.location.kind === 'file' ? f.location.path : null),
+            ),
+        ),
+        ...admitted.credential_findings,
+      ],
+      credential_fingerprints: [
+        ...previous.credential_fingerprints.filter((fp) =>
+          previous.credential_findings.some(
+            (f) =>
+              f.id === fp.finding_id &&
+              f.location.kind === 'file' &&
+              previous.manifest.some(
+                (m) =>
+                  m.kind === 'sql' &&
+                  m.path === (f.location.kind === 'file' ? f.location.path : null),
+              ),
+          ),
+        ),
+        ...admitted.credential_fingerprints,
+      ],
+      ...(previous.sql_analysis
+        ? { sql_analysis: { ...previous.sql_analysis, input_revision: p.input_revision + 1 } }
+        : {}),
     });
     const updated = { ...p, input_revision: p.input_revision + 1 };
     store.saveProject(updated);
@@ -135,8 +180,7 @@ export function verifyProject(id: string, data: unknown, key: string): ContractM
   const p = store.get('Project', id);
   if (
     request.input_revision !== p.input_revision ||
-    hash(request.expectation_revision_ids) !==
-      hash(store.list('Expectation', id).map((e) => e.revision_id))
+    hash(request.expectation_revision_ids) !== hash(view(id).expectations.map((e) => e.revision_id))
   )
     throw new AppError('STALE_REVISION', 409);
   if (!store.inputs(id).schema_sql) throw new AppError('SCHEMA_MISSING', 409);
@@ -260,11 +304,16 @@ export async function editExpectations(
   store.assertIdle(id);
   if (p.expectation_set_revision !== request.expected_revision)
     throw new AppError('STALE_REVISION', 409);
-  const snapshot = store.list('SchemaSnapshot', id).at(-1);
-  if (!snapshot) throw new AppError('SNAPSHOT_MISSING', 409);
+  const snapshot = store.currentSnapshot(id);
+  const analysis = store.inputs(id).sql_analysis;
+  if (!snapshot && !analysis?.tables.length) throw new AppError('SNAPSHOT_MISSING', 409);
   const previous = store.list('Expectation', id);
-  const current = resolveExpectations(snapshot, request.changes, previous, 'user');
-  const findings = await analyzeRls(snapshot, current, id, p.input_revision);
+  const current = snapshot
+    ? resolveExpectations(snapshot, request.changes, previous, 'user')
+    : staticExpectations(analysis!, request.changes, previous, id);
+  const findings = snapshot
+    ? await analyzeRls(snapshot, current, id, p.input_revision)
+    : staticFindings(analysis!, current, id);
   store.transaction(() => {
     store.assertIdle(id);
     if (store.get('Project', id).expectation_set_revision !== p.expectation_set_revision)
@@ -296,5 +345,20 @@ export async function editExpectations(
         );
     store.saveProject({ ...p, expectation_set_revision: p.expectation_set_revision + 1 });
   });
+  enqueueAutomaticAnalysis(store, id);
   return view(id);
+}
+export function investigateProject(
+  id: string,
+  data: unknown,
+  key: string,
+): ContractMap['JobEnvelope'] {
+  const request = validate('ProjectInvestigateRequest', data),
+    p = store.get('Project', id);
+  if (
+    request.input_revision !== p.input_revision ||
+    request.expectation_set_revision !== p.expectation_set_revision
+  )
+    throw new AppError('STALE_REVISION', 409);
+  return store.transaction(() => enqueueProjectAnalysis(store, id, key));
 }

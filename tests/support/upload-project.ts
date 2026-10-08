@@ -7,6 +7,15 @@ export const uploadCanary = 'sb_secret_TEST_ONLY_UPLOAD_CANARY';
 /** Exercise ordinary bounded file admission; no trusted candidate injection. */
 export async function uploadProject(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Project', exact: true }).click();
+  await expect(
+    page
+      .getByText('Add a project', { exact: true })
+      .or(page.getByText('Import another project or analyze replacement files', { exact: true })),
+  ).toBeVisible();
+  const intake = page.getByText('Import another project or analyze replacement files', {
+    exact: true,
+  });
+  if (await intake.isVisible()) await intake.click();
   await page.getByLabel('Schema and source files', { exact: true }).setInputFiles([
     {
       name: 'schema.sql',

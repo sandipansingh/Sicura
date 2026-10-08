@@ -266,11 +266,11 @@ function column(value: unknown, schemas: Set<string>): void {
   for (const c of list(type.typmods)) expression(c);
   for (const c of list(n.constraints)) constraint(c, schemas, String(n.colname));
 }
-function checkAst(ast: Ast): void {
+export function checkAst(ast: Ast, knownSchemas: string[] = ['public']): void {
   if (Math.floor(Number(ast.version) / 10000) !== 17) throw new AppError('SQL_PARSER_VERSION');
   const stmts = list(ast.stmts);
   if (stmts.length > 2000) throw new AppError('SQL_STATEMENT_LIMIT');
-  const schemas = new Set(['public']);
+  const schemas = new Set(knownSchemas);
   let tables = 0,
     columns = 0,
     policies = 0;
@@ -413,9 +413,8 @@ function checkAst(ast: Ast): void {
   }
   if (tables > 50 || columns > 2000 || policies > 500) throw new AppError('SCHEMA_LIMIT');
 }
-export async function admitSql(sql: string): Promise<string> {
+export async function parseSql(sql: string): Promise<{ ast: Ast; sql: string }> {
   if (Buffer.byteLength(sql) > 2 * 1024 * 1024) throw new AppError('INPUT_LIMIT', 413);
-  if (redactText(sql) !== sql) throw new AppError('SQL_CONTAINS_SECRET');
   const parsed = await new Promise<{ ast: Ast; sql: string }>((resolve, reject) => {
     const child = spawn(
       process.execPath,
@@ -461,6 +460,11 @@ export async function admitSql(sql: string): Promise<string> {
     child.stdin.on('error', () => {});
     child.stdin.end(sql);
   });
+  return parsed;
+}
+export async function admitSql(sql: string): Promise<string> {
+  if (redactText(sql) !== sql) throw new AppError('SQL_CONTAINS_SECRET');
+  const parsed = await parseSql(sql);
   checkAst(parsed.ast);
   return parsed.sql;
 }

@@ -20,7 +20,8 @@ export default function CredentialRescan({ view, busy, api, action, onRefresh }:
   const paths = view.input_manifest.filter((f) => f.kind === 'source').map((f) => f.path);
   if (!paths.length) return null;
   return (
-    <section className={styles.panel}>
+    <details className={styles.panel}>
+      <summary>Rescan complete source scope</summary>
       <h2>Rescan complete source scope</h2>
       <p>
         Provide each replacement file or explicitly record its deletion. This checks submitted
@@ -90,6 +91,6 @@ export default function CredentialRescan({ view, busy, api, action, onRefresh }:
       >
         Confirm complete scope and rescan
       </button>
-    </section>
+    </details>
   );
 }

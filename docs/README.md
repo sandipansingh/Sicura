@@ -17,3 +17,7 @@ The decisions document retains historical numbered references: former 00/03/04/1
 D-28 records the connected frontend and new Sicura repository. The landing page is `/`; the workbench is `/app`. Historical evaluation identifiers and commits remain original provenance even though the new repository begins with one commit; old branches, tags and the Gemini stash are preserved in a local history backup.
 
 D-30 defines the regular release interface: four project-workflow tabs, no demo/evaluation product endpoints, and ordinary upload-based browser coverage. Internal fixture reports remain engineering records; UI simplification does not relax evidence wording or safety boundaries.
+
+## Project analysis release (D-31)
+
+Sicura 0.3.0 separates static SQL declarations, Gemma project advice and observed replica evidence. Complex migrations remain inspectable when replay is unsupported. Project shows a compact overview, statement diagnostics and an automatic Gemma summary; repository rescans reuse the original source. The execution allowlist remains unchanged. See the owner documents below for contracts, privacy and limitations.

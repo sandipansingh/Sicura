@@ -129,6 +129,7 @@ describe('repository discovery and privacy', () => {
     });
     expect(result.report.exclusions[0]!.reason).toBe('oversized');
     expect(result.report.rls.reason_code).toBe('IMPORT_MIGRATION_GAP');
+    expect(result.inputs.sql_analysis?.tables[0]?.rls_enabled).toBeNull();
     expect(result.inputs.schema_sql).toBe('');
   });
   it('allows 500 eligible import files while preserving the 200-file upload contract', async () => {

@@ -12,6 +12,11 @@ ajv.addSchema(schema);
 export type ContractName = keyof typeof schema.$defs;
 export interface ContractMap {
   RuntimeState: Wire.RuntimeState;
+  SQLAnalysis: Wire.SQLAnalysis;
+  SQLDiagnostic: Wire.SQLDiagnostic;
+  ProjectSummary: Wire.ProjectSummary;
+  ProjectSummaryOutput: Wire.ProjectSummaryOutput;
+  ProjectInvestigateRequest: Wire.ProjectInvestigateRequest;
   ImportRequest: Wire.ImportRequest;
   ImportSource: Wire.ImportSource;
   ImportSelection: Wire.ImportSelection;
@@ -74,6 +79,10 @@ export function validate<K extends keyof ContractMap>(name: K, data: unknown): C
   const check = ajv.getSchema(`urn:proofsec:contracts:1.0#/$defs/${name}`);
   if (!check || !check(data)) throw new Error('CONTRACT_INVALID');
   const typed = data as ContractMap[K];
+  if (name === 'ProjectSummary') {
+    const s = typed as Wire.ProjectSummary;
+    if ((s.status === 'available') !== (s.output !== null)) throw new Error('AI_ANALYSIS_INVALID');
+  }
   if (name === 'Expectation') expectationInvariant(typed as Wire.Expectation);
   if (name === 'TestResult') resultInvariant(typed as Wire.TestResult);
   if (name === 'Finding') findingInvariant(typed as Wire.Finding);
@@ -134,11 +143,21 @@ export function findingInvariant(f: Wire.Finding): void {
   } else {
     if (
       f.location.kind !== 'database' ||
-      f.evidence.kind !== 'rls' ||
-      f.source.kind !== 'catalog' ||
+      !['rls', 'rls_static'].includes(f.evidence.kind) ||
+      !['catalog', 'sql_ast'].includes(f.source.kind) ||
       !f.expectation
     )
       throw new Error('FINDING_CATEGORY_INVALID');
+    if ((f.source.kind === 'sql_ast') !== (f.evidence.kind === 'rls_static'))
+      throw new Error('FINDING_CATEGORY_INVALID');
+    if (
+      f.source.kind === 'sql_ast' &&
+      (['confirmed', 'fixed', 'fix_not_verified'].includes(f.state) ||
+        f.verification.evidence.length ||
+        f.verification.latest_run_id ||
+        f.remediation.patch_id)
+    )
+      throw new Error('STATIC_EVIDENCE_INVALID');
     expectationInvariant(f.expectation);
     if (
       f.state === 'confirmed' &&
