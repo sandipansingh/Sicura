@@ -1,0 +1,22 @@
+Sicura
+Copyright 2026 Sicura contributors
+
+Project code, evaluation harness and authored fixtures are licensed under
+the Apache License, Version 2.0. See LICENSE.
+
+Gemma 4 is authored by Google DeepMind and downloaded separately through
+Ollama. The exact tested artifact is identified in config/runtime-lock.json
+and skills.md. Its official model card identifies Apache-2.0 licensing:
+https://ai.google.dev/gemma/docs/core/model_card_4
+https://ollama.com/library/gemma4:e4b
+No model weights are redistributed in this repository.
+
+Third-party packages and container contents retain their respective licenses
+and notices. Dependencies are identified by pnpm-lock.yaml; installed package
+license/notice files and the PostgreSQL image remain the upstream artifacts.
+No OWASP endorsement or certification is implied by the reference mapping.
+
+Bundled Bebas Neue, Space Grotesk and JetBrains Mono fonts are from the
+Google Fonts repository, licensed under the SIL Open Font License 1.1.
+See licenses/fonts for the original copyright/license notices and
+config/fonts-lock.json for exact source commit, paths and SHA-256 digests.
