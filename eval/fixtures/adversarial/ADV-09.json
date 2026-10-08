@@ -1,0 +1,6 @@
+{
+  "id": "ADV-09",
+  "input_class": "edge",
+  "purpose": "encoded invalid credential canary redacted at each inspected structured sink",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

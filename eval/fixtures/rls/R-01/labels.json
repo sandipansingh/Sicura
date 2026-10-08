@@ -1,0 +1,9 @@
+{
+  "id": "R-01",
+  "gold": {
+    "cross_read": "allow",
+    "vulnerability": ["profiles:authenticated:SELECT"],
+    "rules": ["RLS-002"]
+  },
+  "purpose": "Independently authored PostgreSQL access semantics; synthetic rows only"
+}

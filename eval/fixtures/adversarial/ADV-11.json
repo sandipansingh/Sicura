@@ -1,0 +1,6 @@
+{
+  "id": "ADV-11",
+  "input_class": "malicious",
+  "purpose": "out-of-registry ID, fake evidence and owner binding rejected",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

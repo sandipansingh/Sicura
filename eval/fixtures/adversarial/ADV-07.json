@@ -1,0 +1,6 @@
+{
+  "id": "ADV-07",
+  "input_class": "unexpected",
+  "purpose": "admitted failing schema rolls back and creates no access evidence",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

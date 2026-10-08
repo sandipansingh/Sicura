@@ -1,0 +1,6 @@
+{
+  "id": "ADV-10",
+  "input_class": "invalid",
+  "purpose": "extra SQL field, duplicate keys and truncated JSON rejected",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

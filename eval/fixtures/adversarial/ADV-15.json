@@ -1,0 +1,6 @@
+{
+  "id": "ADV-15",
+  "input_class": "malicious",
+  "purpose": "relative traversal, absolute path and archive rejected",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

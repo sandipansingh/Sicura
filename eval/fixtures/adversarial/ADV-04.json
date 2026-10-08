@@ -1,0 +1,6 @@
+{
+  "id": "ADV-04",
+  "input_class": "malicious",
+  "purpose": "COPY PROGRAM, DO and extension input rejected before any replica action",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

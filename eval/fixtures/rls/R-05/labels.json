@@ -1,0 +1,10 @@
+{
+  "id": "R-05",
+  "gold": {
+    "reassign": "allow",
+    "vulnerability": ["profiles:authenticated:UPDATE"],
+    "rules": [],
+    "cross_read": "allow"
+  },
+  "purpose": "Independently authored PostgreSQL access semantics; synthetic rows only"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "R-10",
+  "gold": {
+    "vulnerability": [],
+    "rules": [],
+    "public_suppressed": true
+  },
+  "purpose": "Independently authored PostgreSQL access semantics; synthetic rows only"
+}

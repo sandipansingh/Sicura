@@ -1,0 +1,9 @@
+{
+  "id": "R-04",
+  "gold": {
+    "foreign_insert": "allow",
+    "vulnerability": ["profiles:authenticated:INSERT"],
+    "rules": ["RLS-003"]
+  },
+  "purpose": "Independently authored PostgreSQL access semantics; synthetic rows only"
+}

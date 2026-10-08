@@ -1,0 +1,19 @@
+{
+  "id": "R-03",
+  "gold": {
+    "profiles_all_auth": "allow",
+    "profiles_all_anon": "allow",
+    "vulnerability": [
+      "profiles:authenticated:SELECT",
+      "profiles:authenticated:INSERT",
+      "profiles:authenticated:UPDATE",
+      "profiles:authenticated:DELETE",
+      "profiles:anon:SELECT",
+      "profiles:anon:INSERT",
+      "profiles:anon:UPDATE",
+      "profiles:anon:DELETE"
+    ],
+    "rules": ["RLS-001"]
+  },
+  "purpose": "Independently authored PostgreSQL access semantics; synthetic rows only"
+}
