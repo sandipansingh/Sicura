@@ -1,0 +1,11 @@
+node_modules
+.local
+apps/web/.next
+apps/web/next-env.d.ts
+packages/contracts/src/generated.ts
+test-results
+eval/reports/*.json
+playwright-report
+pnpm-lock.yaml
+docs/decisions-and-open-questions.md
+config/ollama/Modelfile
