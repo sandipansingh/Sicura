@@ -1,0 +1,60 @@
+.page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-deep);
+  color: var(--text-main);
+}
+.main {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+.hero {
+  max-width: 850px;
+  margin-bottom: 4rem;
+}
+.hero h1 {
+  font: 400 clamp(3rem, 7vw, 5.5rem) / 1.05 var(--font-display);
+  margin: 0 0 1.5rem;
+}
+.hero p {
+  max-width: 650px;
+  color: var(--text-dim);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+.sectionTitle {
+  font: 400 2rem / 1.2 var(--font-display);
+  margin-bottom: 1.5rem;
+}
+.features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.feature svg {
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
+}
+.feature h3 {
+  font: 400 1.65rem / 1.2 var(--font-display);
+  margin-bottom: 0.75rem;
+}
+.feature p {
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+@media (max-width: 600px) {
+  .main {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
