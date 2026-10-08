@@ -118,6 +118,13 @@
 .aiPanel .eyebrow {
   color: var(--accent-warn);
 }
+.shell .aiPanel li button {
+  margin-left: 0;
+  max-width: 100%;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .evidencePanel {
   border-color: var(--accent-primary);
   border-left: 5px solid var(--accent-primary);
@@ -199,6 +206,7 @@
 }
 .shell li {
   margin: 10px 0 10px 20px;
+  overflow-wrap: anywhere;
 }
 .shell li button {
   margin-left: 12px;
