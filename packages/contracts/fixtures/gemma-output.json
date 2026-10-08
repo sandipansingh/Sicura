@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "finding_id": "f_profiles_select",
+  "explanation": "The authenticated SELECT policy has a constant-true condition.",
+  "context_interpretation": "The user_id relationship suggests ownership; the developer has declared owner-only access.",
+  "severity": "high",
+  "confidence": {
+    "level": "medium",
+    "basis": "Static policy and declared intent; execution evidence is evaluated separately"
+  },
+  "impact": "If reproduced, an authenticated user could retrieve another user's profile in this replica.",
+  "proposed_expectation": null,
+  "attack_hypothesis": {
+    "statement": "User A may read User B's private profile",
+    "actor": "user_a",
+    "target": "user_b",
+    "operation": "SELECT"
+  },
+  "recommended_test_id": "rls.cross_user_read.v1",
+  "remediation_intent": {
+    "template_id": "owner_select_v1",
+    "policy_name": "profiles_select",
+    "owner_column": "user_id",
+    "rationale": "Restrict the existing policy to the declared owner binding"
+  },
+  "evidence_refs": ["ev_profiles"],
+  "uncertainties": ["Synthetic data and simulated claims do not establish production behavior"]
+}
