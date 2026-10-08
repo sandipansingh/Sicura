@@ -25,3 +25,5 @@ Sicura 0.3.0 separates static SQL declarations, Gemma project advice and observe
 ## Supabase database replay release (D-32)
 
 Sicura 0.4.0 adds bounded repository-v3 replay, compatible database helpers, restricted routine execution and dependency-aware synthetic seeds. Imported routines remain transient; only replay identities and normalized metadata are retained. Rescan repository upgrades a saved import. Actual catalogue and scenario coverage remain separate from static declarations and Gemma advice.
+
+The 0.4.0 required gate passed 132 unit/integration tests, eight smoke stages and six Playwright cases on the documented Linux host. Package-consumer commands and current scenario limits are maintained in Security and safety; exact artifact/runtime receipts remain local.

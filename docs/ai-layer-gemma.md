@@ -285,3 +285,5 @@ Per-finding SQL-AST investigations explicitly qualify facts as submitted declara
 ## Expanded replay context (D-32)
 
 Gemma continues to consume normalized/redacted finding facts, diagnostics and coverage only. Repository routine bodies never enter prompts, persistence or advisory UI. Successful database replay may remove earlier unsupported-SQL blockers, but does not authorize Gemma to write or run SQL. Actual local observations, failed controls and unknown expectations retain their authority and qualification independently of a summary. No new model pin or evaluation result is introduced.
+
+The 0.4.0 release gate preserves the real AI-outage workflow and existing live-model approval flow. Packaged-consumer checks additionally require a live project summary. A passing automated check does not establish human faithfulness; Gemma's explanation stays in Project's advisory panel and cannot replace observed access results.
