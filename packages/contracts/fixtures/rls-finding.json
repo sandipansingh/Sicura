@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0",
+  "id": "f_profiles_select",
+  "project_id": "p_demo",
+  "revision": 1,
+  "input_revision": 1,
+  "category": "RLS_MISCONFIGURATION",
+  "title": "Authenticated users accessed another user's profile in the replica",
+  "severity": "high",
+  "severity_basis": "Cross-user access to declared-private profile rows",
+  "confidence": {
+    "level": "high",
+    "basis": "Declared expectation and valid synthetic reproduction"
+  },
+  "source": {
+    "kind": "catalog",
+    "analyzer_version": "1.0.0",
+    "rule_ids": ["RLS-002"]
+  },
+  "location": {
+    "kind": "database",
+    "resource": {
+      "schema": "public",
+      "table": "profiles"
+    },
+    "policy_names": ["profiles_select"],
+    "operation": "SELECT"
+  },
+  "evidence": {
+    "kind": "rls",
+    "id": "ev_profiles",
+    "rule_ids": ["RLS-002"],
+    "operation": "SELECT",
+    "role": "authenticated",
+    "rls_enabled": true,
+    "force_rls": false,
+    "policy_names": ["profiles_select"],
+    "policy_condition": "USING (true)",
+    "grant_summary": "authenticated has SELECT",
+    "snapshot_id": "snap_demo"
+  },
+  "context": {
+    "table_classification": "user_owned",
+    "signals": ["user_id references auth.users.id"],
+    "limitations": ["Synthetic data; no production JWT authentication tested"],
+    "redacted_excerpt": null
+  },
+  "expectation": {
+    "id": "exp_profiles_select",
+    "revision_id": "exp_profiles_select_r1",
+    "revision": 1,
+    "resource": {
+      "schema": "public",
+      "table": "profiles"
+    },
+    "actor": "authenticated",
+    "operation": "SELECT",
+    "expected": "own_rows_only",
+    "source": "declared",
+    "origin": "manifest",
+    "owner_column": "user_id",
+    "team_binding": null,
+    "intentionally_public": false,
+    "rationale": "Private profiles",
+    "signals": [],
+    "confirmed_by": "local_operator",
+    "created_at": "2026-10-05T12:00:00Z"
+  },
+  "ai_analysis": {
+    "status": "pending",
+    "analysis_id": null,
+    "model": null,
+    "model_digest": null,
+    "prompt_version": null,
+    "output": null,
+    "reason_code": null,
+    "created_at": null
+  },
+  "attack_hypothesis": {
+    "statement": "User A may read User B's private profile",
+    "actor": "user_a",
+    "target": "user_b",
+    "operation": "SELECT",
+    "test_id": "rls.cross_user_read.v1",
+    "evidence_refs": ["ev_profiles"],
+    "origin": "deterministic"
+  },
+  "state": "confirmed",
+  "suppression": null,
+  "verification": {
+    "status": "complete",
+    "latest_run_id": "run_before",
+    "stale": false,
+    "evidence": [
+      {
+        "id": "result_cross_read",
+        "run_id": "run_before",
+        "scenario_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "test_id": "rls.cross_user_read.v1",
+        "resource": {
+          "schema": "public",
+          "table": "profiles"
+        },
+        "operation": "SELECT",
+        "actor": "user_a",
+        "target": "user_b",
+        "expectation_id": "exp_profiles_select",
+        "expectation_revision": 1,
+        "expected": "deny",
+        "observed": "allow",
+        "outcome": "mismatch",
+        "denial_mechanism": null,
+        "reason_code": null,
+        "row_count": 1,
+        "synthetic_row_aliases": ["profiles_b"],
+        "sqlstate": null,
+        "control_result_ids": ["result_own_read"],
+        "role_assertion_passed": true,
+        "target_existence_passed": true,
+        "duration_ms": 12,
+        "recorded_at": "2026-10-05T12:00:05Z"
+      }
+    ]
+  },
+  "remediation": {
+    "status": "none",
+    "patch_id": null,
+    "patch_digest": null,
+    "summary": null,
+    "approved_by": null,
+    "approved_at": null
+  },
+  "retest_result": null,
+  "timestamps": {
+    "created_at": "2026-10-05T12:00:00Z",
+    "updated_at": "2026-10-05T12:00:05Z",
+    "confirmed_at": "2026-10-05T12:00:05Z",
+    "fixed_at": null
+  }
+}

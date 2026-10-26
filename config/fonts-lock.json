@@ -1,0 +1,42 @@
+{
+  "upstream_repository": "https://github.com/google/fonts",
+  "upstream_commit": "5e8a3ba899557829a76cfdac30fa512bda91d7ca",
+  "artifacts": [
+    {
+      "path": "apps/web/app/fonts/BebasNeue-Regular.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/bebasneue/BebasNeue-Regular.ttf",
+      "sha256": "08e4623805102d819f58601e46e345648846075e363b2ceb23313c2d1c83ec73"
+    },
+    {
+      "path": "licenses/fonts/bebasneue-OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/bebasneue/OFL.txt",
+      "sha256": "1ad713665104ebc1ad80176b6b14f2d7dbc91aeed4180855a9514bb350b52e31",
+      "upstream_sha256": "72082f6cb4d04be2ecf7cc7d9e1e7d73787f0af8a5a278a47cade70c16b78341",
+      "normalization": "LF line endings; trailing whitespace removed; license wording preserved"
+    },
+    {
+      "path": "apps/web/app/fonts/SpaceGrotesk-Variable.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf",
+      "sha256": "acad6de1fc93436f5c0f1f4137751ef04f1aea3063e7036535970ffcfbd79f72"
+    },
+    {
+      "path": "licenses/fonts/spacegrotesk-OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/spacegrotesk/OFL.txt",
+      "sha256": "18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943",
+      "upstream_sha256": "564ce565c371c5e5bbf286006565a7c9aa55a9f56e7ca58d56e05d649dd61a72",
+      "normalization": "LF line endings; trailing whitespace removed; license wording preserved"
+    },
+    {
+      "path": "apps/web/app/fonts/JetBrainsMono-Variable.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf",
+      "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda"
+    },
+    {
+      "path": "licenses/fonts/jetbrainsmono-OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/5e8a3ba899557829a76cfdac30fa512bda91d7ca/ofl/jetbrainsmono/OFL.txt",
+      "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d",
+      "upstream_sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d",
+      "normalization": "LF line endings; trailing whitespace removed; license wording preserved"
+    }
+  ]
+}

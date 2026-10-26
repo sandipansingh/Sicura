@@ -1,0 +1,28 @@
+{
+  "configuration_version": 1,
+  "recorded_date": "2026-10-06",
+  "ollama_version": "0.35.1",
+  "prompt_version": "1",
+  "base_model": {
+    "name": "gemma4:e4b-it-q4_K_M",
+    "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "size_bytes": 6583656505,
+    "weights_digest": "sha256:370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+    "format": "gguf",
+    "quantization": "Q4_K_M"
+  },
+  "project_model": {
+    "name": "proofsec-gemma:e4b-q4",
+    "digest": "e70f7ab65c6b1f83cc4b5fdefb47a78b882c6a41c841fcb6de5f19ec82f16c9b",
+    "size_bytes": 6583657027
+  },
+  "request_defaults": {
+    "stream": false,
+    "think": false,
+    "options": {
+      "num_ctx": 4096,
+      "num_predict": 768,
+      "temperature": 0
+    }
+  }
+}

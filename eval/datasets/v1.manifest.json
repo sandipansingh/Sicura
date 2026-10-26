@@ -1,0 +1,506 @@
+{
+  "id": "proofsec-curated-v1-tier1",
+  "version": 1,
+  "created_at": "2026-10-06T11:30:15.263Z",
+  "suites": {
+    "detector": [
+      "CD-01",
+      "CD-02",
+      "CD-03",
+      "CD-04",
+      "CD-05",
+      "CD-06",
+      "CD-07",
+      "CD-08",
+      "CD-09",
+      "CD-10",
+      "CD-11",
+      "CD-12"
+    ],
+    "context": [
+      "CC-01",
+      "CC-02",
+      "CC-03",
+      "CC-04",
+      "CC-05",
+      "CC-06",
+      "CC-07",
+      "CC-08",
+      "CC-09",
+      "CC-10",
+      "CC-11",
+      "CC-12",
+      "CC-13",
+      "CC-14",
+      "CC-15",
+      "CC-16",
+      "CC-17",
+      "CC-18",
+      "CC-19",
+      "CC-20"
+    ],
+    "rls": [
+      "R-01",
+      "R-02",
+      "R-03",
+      "R-04",
+      "R-05",
+      "R-06",
+      "R-07",
+      "R-08",
+      "R-09",
+      "R-10",
+      "R-11",
+      "R-12",
+      "R-13"
+    ],
+    "adversarial": [
+      "ADV-02",
+      "ADV-03",
+      "ADV-04",
+      "ADV-05",
+      "ADV-07",
+      "ADV-08",
+      "ADV-09",
+      "ADV-10",
+      "ADV-11",
+      "ADV-15"
+    ],
+    "ai": ["AI-01", "AI-02", "AI-03", "AI-04"]
+  },
+  "files": [
+    {
+      "path": "eval/fixtures/adversarial/ADV-02.json",
+      "sha256": "64175e83e48a5c0d574e0fd4a7497e2848e5212a0d45972d90ab0639fa1f7a92",
+      "bytes": 197
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-03.json",
+      "sha256": "6b61229713c42ea4fe9586e3777996930d16a0ef49f19e4bbf8b16634b8b3b28",
+      "bytes": 191
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-04.json",
+      "sha256": "37a566a32bead8049c6b86c74c2fc7c4020ccedb507b3e47d3448af96f883d27",
+      "bytes": 189
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-05.json",
+      "sha256": "91643e684ab6b8de2b1b49cbe60b950ab2d63465b80747c0678fcaa0dc357e03",
+      "bytes": 192
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-07.json",
+      "sha256": "4b097e6a17ac9a5f0df8ad98778c05ca66c539de4d01298aceccbb0ba9d98e2c",
+      "bytes": 184
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-08.json",
+      "sha256": "cb92c330f618f666aa95e7d174d5ccad213293de7e02cdd7636a111681741a15",
+      "bytes": 164
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-09.json",
+      "sha256": "101b0677f053b1d941af6f795ca3012d7e92fa482203d4291221a9fc40cc37b5",
+      "bytes": 189
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-10.json",
+      "sha256": "9d84eafbde3807263e1748360bdff131cbe831bdcbfe8db4b08ebd6803b6a85f",
+      "bytes": 175
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-11.json",
+      "sha256": "435dbcc62d5f77e7ab5fddeaf22301c7a3511cea661deba38a10c3e85f35479e",
+      "bytes": 178
+    },
+    {
+      "path": "eval/fixtures/adversarial/ADV-15.json",
+      "sha256": "093805c521907f2126763145501b7fcdaf07703dd9312a9560a4b823f96f253f",
+      "bytes": 172
+    },
+    {
+      "path": "eval/fixtures/ai/AI-01.json",
+      "sha256": "11b569693beeaf8a23b652bb5b5dbb09cd153b188bda6e6376b65fc0c21339ba",
+      "bytes": 270
+    },
+    {
+      "path": "eval/fixtures/ai/AI-02.json",
+      "sha256": "e7c0e16b8f2055e2dfad9fd4b8f162abc22b84410ef079b8a63ca19e9e65a9e5",
+      "bytes": 270
+    },
+    {
+      "path": "eval/fixtures/ai/AI-03.json",
+      "sha256": "32c7569edb001142571b49b0eee98eb90c7cc263d1fd468bf50edb17d0693c1b",
+      "bytes": 272
+    },
+    {
+      "path": "eval/fixtures/ai/AI-04.json",
+      "sha256": "6571cce2e7f7b769c949a4830d459af12f0f6aef7c9fe5e411ff246174d7765e",
+      "bytes": 269
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-01.json",
+      "sha256": "7ff6095652f08a7cd20af743c32a21e48f8220319a34d5d86dc9d0650bfdd0e2",
+      "bytes": 354
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-02.json",
+      "sha256": "4b1a082da7454ba912d4ac1e409bdcb3c2d805e53d1602141797eeb8cd93486f",
+      "bytes": 373
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-03.json",
+      "sha256": "0dbc75decca2458bfd622d7d8fe09514d9f10a5aff24acd42b1a9aa3799ff2d6",
+      "bytes": 340
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-04.json",
+      "sha256": "03a88d64818386443580af7112a534f007226fb9c716272048dd5a0d77b51a5d",
+      "bytes": 353
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-05.json",
+      "sha256": "7bfc12b7bbf0d966d61640a240baace4c2d6893c0e7012ac6f3fec737690f4c9",
+      "bytes": 336
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-06.json",
+      "sha256": "0efc3eeefd2d432e5596786245848f182415db9f2ccb2eb3b8d24f0f530976f2",
+      "bytes": 330
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-07.json",
+      "sha256": "b689b38c5041a4433b1507fadde35d37fae0e2eeb6f6c0b23c9d141989a25c4a",
+      "bytes": 340
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-08.json",
+      "sha256": "185137908fefdb2daddebc79410d02a273b00a9d1242a47335e5c28ed36da09a",
+      "bytes": 340
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-09.json",
+      "sha256": "9fc3ac8a1aaf209b752f51eeefa3ff190057e4909e833cf3ebdca41f0b4e82d6",
+      "bytes": 356
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-10.json",
+      "sha256": "521bbea2a0606672cae32234fed3e38c7badc94dc68d276c78459ce01aed615a",
+      "bytes": 363
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-11.json",
+      "sha256": "142fd380a6532fc7e746e6f6ad41c14e97cb019054ecddc30fda08a670204a91",
+      "bytes": 342
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-12.json",
+      "sha256": "e45881f4c54efa5102b88aea09f46421a3128a010f7d14f60ac8ea2e5c637d66",
+      "bytes": 357
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-13.json",
+      "sha256": "959f594376b67d1b36f2eae1d569b2759fb28270e1a088bf0e4373964035e270",
+      "bytes": 331
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-14.json",
+      "sha256": "73bfb813be3e6f23192f86155f2e3751d9ce6a2f00f7f3021f7c0a766074b49c",
+      "bytes": 328
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-15.json",
+      "sha256": "16ad4985ced7a6481bc7cce9a46fb947dcd853330182755dabcf5edf84db7384",
+      "bytes": 333
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-16.json",
+      "sha256": "157ca69cb42cd9541a9246ceae5a529ee3baf8155daf3d299f82c3153623a7c7",
+      "bytes": 332
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-17.json",
+      "sha256": "4fa7ec6bc3a86b7a15e042041b1a9b638b1159e41c112b3f1c5b6a9c2f68509a",
+      "bytes": 329
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-18.json",
+      "sha256": "d90cb8adca393f071ddedbff05d4aeb874967be625ce2cdaf3035c001315eca9",
+      "bytes": 326
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-19.json",
+      "sha256": "ac0f033c8745e1181ab811c5a66a5754b4cd3da7ed201d5b59126083a0be65ec",
+      "bytes": 336
+    },
+    {
+      "path": "eval/fixtures/credentials/context/CC-20.json",
+      "sha256": "ed5dfa99cd9c8a595584b9afc572fdeaaa64f5ea851e4149042887be4548b538",
+      "bytes": 348
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-01.json",
+      "sha256": "efc67e56e61a4c861d501ff2b656a3c23344bf64180ec9ac3985296f9f500dbb",
+      "bytes": 204
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-02.json",
+      "sha256": "696ebe239154fdfb384fca075eca73e2fe99969cba763688b034994e5b19b8b7",
+      "bytes": 196
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-03.json",
+      "sha256": "8971b10814a40b7cd942e552745ba6d6570cb6600604cce0d068f94bbef10578",
+      "bytes": 202
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-04.json",
+      "sha256": "a25c7ec58fc224d97beb84a4cfc29374544dabe74be41d8838207e256eb273b7",
+      "bytes": 201
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-05.json",
+      "sha256": "54934e347e91a4f4f707c343068b35750ff8c9d028cc3144f219b0fdaa2d3cb9",
+      "bytes": 199
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-06.json",
+      "sha256": "5cadfb09c5a8c63d2efa21fd2b58e410704546fb51fc336083852736cc274445",
+      "bytes": 203
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-07.json",
+      "sha256": "d22ca40474fc0b2289d1c42d4a709d7bcc9e818160c00a320ae5baf939dd5428",
+      "bytes": 198
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-08.json",
+      "sha256": "795e7be4bea09b382937c38ea52a055eff9000f1ae45017f844ad1539fb8f03b",
+      "bytes": 204
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-09.json",
+      "sha256": "1a04911b5d46b8d9acf83db20954a72bd234137faa7d658192c6ce25de17722d",
+      "bytes": 193
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-10.json",
+      "sha256": "6ea81159ee815ee2ae81af385749873968c5ff5d56052129effeacd231b17a82",
+      "bytes": 195
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-11.json",
+      "sha256": "f0d58f0827a5f75b1acc3412e985d1d729b742a5637aaa2bdf3ea4de297e2d8e",
+      "bytes": 194
+    },
+    {
+      "path": "eval/fixtures/credentials/recipes/CD-12.json",
+      "sha256": "424fefd0158870446f200f8b2efa62c762b165f5c652232e1f582d997a927423",
+      "bytes": 200
+    },
+    {
+      "path": "eval/fixtures/rls/R-01/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-01/labels.json",
+      "sha256": "d5469c234db7d515cebf0dcdf56be031b3d3b1981ffa28590ef6517f4053392a",
+      "bytes": 232
+    },
+    {
+      "path": "eval/fixtures/rls/R-01/schema.sql",
+      "sha256": "bdbfecab61d9d51390a2b65326f20aecc905253aa054407f58b21913dbf21d75",
+      "bytes": 1178
+    },
+    {
+      "path": "eval/fixtures/rls/R-02/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-02/labels.json",
+      "sha256": "7c2bb8527f5e86c5383af4f33f3b449d1cf87a5aa53c175cf6f54aac2f9f1785",
+      "bytes": 165
+    },
+    {
+      "path": "eval/fixtures/rls/R-02/schema.sql",
+      "sha256": "9afa1ad053768bca8d6975b370d2b3ef2a0743a227b64953c279b3c7d1da291b",
+      "bytes": 1203
+    },
+    {
+      "path": "eval/fixtures/rls/R-03/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-03/labels.json",
+      "sha256": "934ac33ef1e9fb889b357a7a29d941cec8a455708130dc0b0c48ece720cfd761",
+      "bytes": 522
+    },
+    {
+      "path": "eval/fixtures/rls/R-03/schema.sql",
+      "sha256": "4c6da69580a949a233e7b2c9df3ff55e1bebcdfab4e4f2f0796a3b2579426606",
+      "bytes": 1149
+    },
+    {
+      "path": "eval/fixtures/rls/R-04/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-04/labels.json",
+      "sha256": "f4c0b7840dff640ef85e10879477b0e1bb85804c8e06ababaf853a6f9bce4a28",
+      "bytes": 236
+    },
+    {
+      "path": "eval/fixtures/rls/R-04/schema.sql",
+      "sha256": "29119c28e4371e9f09610c45b2c3a0028e5a146ce74b328c0dea8535be8f62e8",
+      "bytes": 1178
+    },
+    {
+      "path": "eval/fixtures/rls/R-05/expectations.json",
+      "sha256": "930bbd9c6c71115757a3bb1a79cc61f403b3b3b10392976a287c7d657599b72f",
+      "bytes": 5216
+    },
+    {
+      "path": "eval/fixtures/rls/R-05/labels.json",
+      "sha256": "66c30eaef87a43d602e0198e7c3a8443d0936a799db4cab2b892fc458f10244f",
+      "bytes": 248
+    },
+    {
+      "path": "eval/fixtures/rls/R-05/schema.sql",
+      "sha256": "cc3cc26223ab39fe459f59cebd75f84b16e6c0b792f02f03ae40f3eaef573dda",
+      "bytes": 1153
+    },
+    {
+      "path": "eval/fixtures/rls/R-06/expectations.json",
+      "sha256": "930bbd9c6c71115757a3bb1a79cc61f403b3b3b10392976a287c7d657599b72f",
+      "bytes": 5216
+    },
+    {
+      "path": "eval/fixtures/rls/R-06/labels.json",
+      "sha256": "233a7e39572bc1a97dd9b1df4bd52d97553c053bb3345e7094b195655c00fb98",
+      "bytes": 192
+    },
+    {
+      "path": "eval/fixtures/rls/R-06/schema.sql",
+      "sha256": "fe83b88e3bae4ee0d275ae0dac68178a041555c46225fa766ecc3891e1e525a8",
+      "bytes": 1133
+    },
+    {
+      "path": "eval/fixtures/rls/R-07/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-07/labels.json",
+      "sha256": "9d9495e7d28cc40ed97c6e9221e6d04a427db2d8645e49c38d8ee3b4a8847e1f",
+      "bytes": 294
+    },
+    {
+      "path": "eval/fixtures/rls/R-07/schema.sql",
+      "sha256": "6f7780bda7f73568a0090be6bb7351768a88fdb57f20c33d1ac67a8af052c944",
+      "bytes": 1153
+    },
+    {
+      "path": "eval/fixtures/rls/R-08/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-08/labels.json",
+      "sha256": "b54b4e55bb4f8b8935bca1f22a8f60cc743896ace9b5c9d06ffb06d7630e79a9",
+      "bytes": 232
+    },
+    {
+      "path": "eval/fixtures/rls/R-08/schema.sql",
+      "sha256": "afa57fd49b09a1577d883b2e92fc8e5ada50ac92dad3d736207630c770586b32",
+      "bytes": 1290
+    },
+    {
+      "path": "eval/fixtures/rls/R-09/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-09/labels.json",
+      "sha256": "c60c547e1ffbdf12bede28c0bbd4f83347f3e42617ace9d9f20085aec7a0d762",
+      "bytes": 174
+    },
+    {
+      "path": "eval/fixtures/rls/R-09/schema.sql",
+      "sha256": "283bdb502145d32e76c623f78b897c1f83e1d259f6c424f8605db4620722480e",
+      "bytes": 1308
+    },
+    {
+      "path": "eval/fixtures/rls/R-10/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-10/labels.json",
+      "sha256": "581257ae638095739d9449454d5aa88565d8e9b750ffdf70fd1386f8c7b87f62",
+      "bytes": 196
+    },
+    {
+      "path": "eval/fixtures/rls/R-10/schema.sql",
+      "sha256": "9afa1ad053768bca8d6975b370d2b3ef2a0743a227b64953c279b3c7d1da291b",
+      "bytes": 1203
+    },
+    {
+      "path": "eval/fixtures/rls/R-11/expectations.json",
+      "sha256": "6c1189f9d5e18c07a0075bd2fd6652a7de5ad93d2c41aee081837686d5e70aed",
+      "bytes": 52
+    },
+    {
+      "path": "eval/fixtures/rls/R-11/labels.json",
+      "sha256": "ed84c039666fccd1de98867228c09c2fc1a4b0c7500e069ebd5868b8346f096b",
+      "bytes": 199
+    },
+    {
+      "path": "eval/fixtures/rls/R-11/schema.sql",
+      "sha256": "71136bce95bf2d50b96de3601426a66fc3c5d8f90d275b5c34585e2ae18bfe1b",
+      "bytes": 288
+    },
+    {
+      "path": "eval/fixtures/rls/R-12/expectations.json",
+      "sha256": "6c1189f9d5e18c07a0075bd2fd6652a7de5ad93d2c41aee081837686d5e70aed",
+      "bytes": 52
+    },
+    {
+      "path": "eval/fixtures/rls/R-12/labels.json",
+      "sha256": "8e0af3c5aff12132e3e873316b0e726ffce71629352029eaa9874fcb067715ad",
+      "bytes": 261
+    },
+    {
+      "path": "eval/fixtures/rls/R-12/schema.sql",
+      "sha256": "bdbfecab61d9d51390a2b65326f20aecc905253aa054407f58b21913dbf21d75",
+      "bytes": 1178
+    },
+    {
+      "path": "eval/fixtures/rls/R-13/expectations.json",
+      "sha256": "534811f17bd01c1d34ca5a111e2763632ea85a23e1502e761fcafa1cb873ba46",
+      "bytes": 5180
+    },
+    {
+      "path": "eval/fixtures/rls/R-13/labels.json",
+      "sha256": "f318fe78e5b9a353c0d2598501ba5554c45d6e44ab14007de164af81b09a5464",
+      "bytes": 203
+    },
+    {
+      "path": "eval/fixtures/rls/R-13/schema.sql",
+      "sha256": "c03761770616df988945f6062547aae376b529f1aac5012d75d7c6f376fc3675",
+      "bytes": 1257
+    }
+  ],
+  "variants": [],
+  "limitations": [
+    "Synthetic invalid detector recipes; no credential validity tested",
+    "Context candidate injection is separate from end-to-end detector metrics",
+    "13 RLS base fixtures; R-14 and six target seeder variants not implemented",
+    "Four live AI cases; faithfulness rubric requires human review",
+    "Ten adversarial fixtures; omitted IDs are not claimed"
+  ]
+}

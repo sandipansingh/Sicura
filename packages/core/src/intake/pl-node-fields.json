@@ -1,0 +1,22 @@
+{
+  "PLpgSQL_function": ["new_varno", "old_varno", "datums", "action"],
+  "PLpgSQL_var": ["refname", "datatype", "lineno", "default_val"],
+  "PLpgSQL_type": ["typname"],
+  "PLpgSQL_rec": ["refname", "dno", "lineno"],
+  "PLpgSQL_recfield": ["fieldname", "recparentno"],
+  "PLpgSQL_stmt_block": ["lineno", "body"],
+  "PLpgSQL_stmt_execsql": ["lineno", "sqlstmt", "into", "target"],
+  "PLpgSQL_expr": ["query", "parseMode"],
+  "PLpgSQL_stmt_return": ["lineno", "expr"],
+  "PLpgSQL_stmt_assign": ["lineno", "varno", "expr"],
+  "PLpgSQL_row": ["refname", "lineno", "fields"],
+  "PLpgSQL_stmt_if": ["lineno", "cond", "then_body", "else_body", "elsif_list"],
+  "PLpgSQL_stmt_dynexecute": ["lineno", "query"],
+  "PLpgSQL_stmt_raise": ["lineno", "elog_level", "message", "options", "params"],
+  "PLpgSQL_raise_option": ["opt_type", "expr"],
+  "PLpgSQL_stmt_perform": ["lineno", "expr"],
+  "PLpgSQL_stmt_fors": ["lineno", "var", "body", "query"],
+  "PLpgSQL_stmt_return_query": ["lineno", "query"],
+  "PLpgSQL_if_elsif": ["lineno", "cond", "stmts"],
+  "PLpgSQL_stmt_foreach_a": ["lineno", "varno", "expr", "body"]
+}

@@ -1,0 +1,1 @@
+CREATE TABLE public.items(id uuid PRIMARY KEY, user_id uuid REFERENCES auth.users(id), value text);

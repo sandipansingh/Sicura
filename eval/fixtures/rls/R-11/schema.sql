@@ -1,0 +1,1 @@
+CREATE TABLE public.ambiguous (id uuid PRIMARY KEY, account_id uuid, title text NOT NULL); ALTER TABLE public.ambiguous ENABLE ROW LEVEL SECURITY; GRANT SELECT ON public.ambiguous TO authenticated; CREATE POLICY ambiguous_read ON public.ambiguous FOR SELECT TO authenticated USING (true);

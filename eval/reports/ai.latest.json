@@ -1,0 +1,828 @@
+{
+  "schema_version": "1.0",
+  "id": "evaluation_2c4c4facd4974cd4930a87d24671daa7",
+  "suite": "ai",
+  "status": "incomplete",
+  "dataset_id": "proofsec-curated-v1-tier1",
+  "dataset_digest": "2bc3896f89f70d53f477fc2c5891ddb3285a0c931be159193590dcf9ea7f63a6",
+  "commit": "f91e8c0e4d305eb1c7a4bee42ca203f04bd5c1c9",
+  "implementation_digest": "40705f2a0cf0a9d7a5a0e985e87aa29f90f7f580179fef648aecb2295a92ec92",
+  "working_tree_dirty": true,
+  "harness_version": "1.1.0",
+  "registry_version": "1",
+  "prompt_version": "4",
+  "model_tag": "gemma4:e4b",
+  "model_parameters": {
+    "temperature": 0,
+    "context_tokens": 4096,
+    "output_tokens": 768,
+    "thinking": false,
+    "streaming": false,
+    "deadline_ms": 30000,
+    "max_attempts": 2,
+    "warm_state": "not_controlled_includes_load"
+  },
+  "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+  "postgres_image": "postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826",
+  "hardware": {
+    "os": "linux",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 7840HS w/ Radeon 780M Graphics",
+    "ram_bytes": 15467515904,
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU, 595.91.07, 8188 MiB"
+  },
+  "runtime": {
+    "node": "24.13.0",
+    "pnpm": "10.29.1",
+    "docker": "29.6.2",
+    "ollama": "ollama version is 0.35.1"
+  },
+  "created_at": "2026-10-06T20:20:28.410Z",
+  "duration_ms": 56268.004406,
+  "cases": [
+    {
+      "id": "AI-01-r1",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 5048.236648,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_90fec98f84994ec8bbd902700ccfeea8",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_5b812636cbc44075b9a1ad374169bbcd",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. Intended owner access differs from current policy.",
+          "context_interpretation": "Intended owner rule (exp_28cb2dd2731d494e4b815ff6) requires own_rows_only access for authenticated actors. Current policy (evidence_b0a499b4815443af92859a7b5b697267) shows a permissive USING true branch.",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_b0a499b4815443af92859a7b5b697267"
+          },
+          "impact": "Unauthorized cross-user data access is possible.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "Authenticated users may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.own_row_access.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Enforce owner-only access as declared in expectation exp_28cb2dd2731d494e4b815ff6."
+          },
+          "evidence_refs": [
+            "evidence_b0a499b4815443af92859a7b5b697267"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:33.669Z"
+      }
+    },
+    {
+      "id": "AI-01-r2",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 4589.06202,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_a12fd975ca19479f8ee983a8ca33587e",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_5b812636cbc44075b9a1ad374169bbcd",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. Intended owner access differs from current policy.",
+          "context_interpretation": "Intended owner rule requires own_rows_only access for authenticated actors. Current policy allows access via permissive USING true branch.",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_b0a499b4815443af92859a7b5b697267"
+          },
+          "impact": "Unauthorized cross-user data access is possible under current policy.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "Authenticated users may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.own_row_access.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Enforce owner-only access as declared in expectation exp_28cb2dd2731d494e4b815ff6."
+          },
+          "evidence_refs": [
+            "evidence_b0a499b4815443af92859a7b5b697267"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:38.734Z"
+      }
+    },
+    {
+      "id": "AI-01-r3",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 4873.310474000002,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_5a248a7a986941fb825a4832b0a03ea5",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_5b812636cbc44075b9a1ad374169bbcd",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. Intended owner access differs from current policy.",
+          "context_interpretation": "Intended owner rule is 'own_rows_only' (exp_28cb2dd2731d494e4b815ff6). Current policy allows access via permissive USING true (evidence_b0a499b4815443af92859a7b5b697267).",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_b0a499b4815443af92859a7b5b697267"
+          },
+          "impact": "Unauthorized cross-user data access is possible under current policy.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "Authenticated users may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.own_row_access.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Enforce owner-only access as declared in expectation exp_28cb2dd2731d494e4b815ff6."
+          },
+          "evidence_refs": [
+            "evidence_b0a499b4815443af92859a7b5b697267"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:43.323Z"
+      }
+    },
+    {
+      "id": "AI-02-r1",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 5000.048040999998,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_42b30ec6379240ec8782e6d430b87069",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_8c6dcfb2565b4a5aa9ecbb070286b742",
+          "explanation": "Under the inferred expectation, the heuristic is not a human declaration. The permissive USING branch is true, lacking ownership restriction, despite RLS being enabled.",
+          "context_interpretation": "Under the inferred expectation, the heuristic is not a human declaration. The expectation is that authenticated users only access their own rows.",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          },
+          "impact": "Unauthorized cross-user data access is possible due to the permissive RLS condition.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "own_rows_only",
+            "owner_column": "user_id",
+            "rationale": "The policy should restrict access to rows matching the authenticated user's ID."
+          },
+          "attack_hypothesis": {
+            "statement": "An authenticated user may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Modify the RLS policy to enforce ownership restriction based on the user_id column."
+          },
+          "evidence_refs": [
+            "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:49.847Z"
+      }
+    },
+    {
+      "id": "AI-02-r2",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 4879.597390999999,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_dc9b72ecc95d4053a60aceddb3f9e549",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_8c6dcfb2565b4a5aa9ecbb070286b742",
+          "explanation": "Under the inferred expectation, the heuristic is not a human declaration. The permissive USING branch is true, lacking ownership restriction, despite RLS being enabled.",
+          "context_interpretation": "Under the inferred expectation, the heuristic is not a human declaration. The expectation is that authenticated users only access their own rows.",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          },
+          "impact": "Unauthorized cross-user data access is possible due to the permissive RLS condition.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "own_rows_only",
+            "owner_column": "user_id",
+            "rationale": "The policy should restrict access to rows matching the authenticated user's ID."
+          },
+          "attack_hypothesis": {
+            "statement": "An authenticated user may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Enforce row-level security to ensure users only see their own profiles."
+          },
+          "evidence_refs": [
+            "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:54.847Z"
+      }
+    },
+    {
+      "id": "AI-02-r3",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 4885.308862000002,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_57123ccb2fc34528813ac0c4c4354d4c",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_8c6dcfb2565b4a5aa9ecbb070286b742",
+          "explanation": "Under the inferred expectation, the heuristic is not a human declaration. The permissive USING branch is true, lacking ownership restriction, despite RLS being enabled.",
+          "context_interpretation": "Under the inferred expectation, the heuristic is not a human declaration. The expectation is that authenticated users only access their own rows.",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          },
+          "impact": "Unauthorized cross-user data access is possible due to the permissive RLS condition.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "own_rows_only",
+            "owner_column": "user_id",
+            "rationale": "The policy should restrict access to rows matching the authenticated user's ID."
+          },
+          "attack_hypothesis": {
+            "statement": "An authenticated user may read rows belonging to other users.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": {
+            "template_id": "owner_select_v1",
+            "policy_name": "profiles_select",
+            "owner_column": "user_id",
+            "rationale": "Enforce row-level security to ensure users only see their own profiles."
+          },
+          "evidence_refs": [
+            "evidence_c63989f921e749a4bb0e7efff8be3fa0"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:19:59.727Z"
+      }
+    },
+    {
+      "id": "AI-03-r1",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3474.1847080000007,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_4c969c2e85594f37a8faa4a630ecaa1c",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_438240e042af4be3a6f6741fc9aeb307",
+          "explanation": "A privileged backend credential was found in the frontend context. Evidence ID: evidence_0662cb95489d476a97e566b9c27064e9.",
+          "context_interpretation": "The finding is based on a synthetic credential fixture in the frontend context.",
+          "severity": "high",
+          "confidence": {
+            "level": "high",
+            "basis": "Concrete observable fact"
+          },
+          "impact": "Potential unauthorized access due to exposed secret.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "The exposed credential could be used to access backend systems.",
+            "actor": null,
+            "target": null,
+            "operation": null
+          },
+          "recommended_test_id": null,
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_0662cb95489d476a97e566b9c27064e9"
+          ],
+          "uncertainties": [
+            "Static exposure only; validity, rotation and previously published artifacts were not tested"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:04.616Z"
+      }
+    },
+    {
+      "id": "AI-03-r2",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3266.2301320000042,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_0b6c410035c349369be76dcb06131ec3",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_438240e042af4be3a6f6741fc9aeb307",
+          "explanation": "A privileged backend credential was found in the frontend context. Evidence ID: evidence_0662cb95489d476a97e566b9c27064e9.",
+          "context_interpretation": "The finding is based on a synthetic credential fixture in the frontend context.",
+          "severity": "high",
+          "confidence": {
+            "level": "high",
+            "basis": "Concrete observable fact"
+          },
+          "impact": "Potential unauthorized access due to exposed secret.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "The exposed credential could be used to access backend systems.",
+            "actor": null,
+            "target": null,
+            "operation": null
+          },
+          "recommended_test_id": null,
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_0662cb95489d476a97e566b9c27064e9"
+          ],
+          "uncertainties": [
+            "Static exposure only; validity, rotation and previously published artifacts were not tested"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:08.090Z"
+      }
+    },
+    {
+      "id": "AI-03-r3",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3246.0294950000025,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_bbf2db17f5c94e7a90624b35869f59c9",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_438240e042af4be3a6f6741fc9aeb307",
+          "explanation": "A privileged backend credential was found in the frontend context. Evidence ID: evidence_0662cb95489d476a97e566b9c27064e9.",
+          "context_interpretation": "The finding is based on a synthetic credential fixture in the frontend context.",
+          "severity": "high",
+          "confidence": {
+            "level": "high",
+            "basis": "Concrete observable fact"
+          },
+          "impact": "Potential unauthorized access due to exposed secret.",
+          "proposed_expectation": null,
+          "attack_hypothesis": {
+            "statement": "The exposed credential could be used to access backend systems.",
+            "actor": null,
+            "target": null,
+            "operation": null
+          },
+          "recommended_test_id": null,
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_0662cb95489d476a97e566b9c27064e9"
+          ],
+          "uncertainties": [
+            "Static exposure only; validity, rotation and previously published artifacts were not tested"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:11.356Z"
+      }
+    },
+    {
+      "id": "AI-04-r1",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3991.679007999999,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_dfefbf02a92b4735b513b44005600923",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_82d07b3184c6492ea58226f102046771",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. RLS is enabled.",
+          "context_interpretation": "unknown",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          },
+          "impact": "Data may be accessible beyond intended scope due to permissive RLS branch.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "unknown",
+            "owner_column": null,
+            "rationale": "Unknown intended access; no rule proposed."
+          },
+          "attack_hypothesis": {
+            "statement": "Authenticated users might read rows without ownership restrictions.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:16.313Z"
+      }
+    },
+    {
+      "id": "AI-04-r2",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3849.555333999997,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_df20f458430c4d94a5c9682260c9a908",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_82d07b3184c6492ea58226f102046771",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. RLS is enabled.",
+          "context_interpretation": "unknown",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          },
+          "impact": "Data may be accessible beyond intended scope due to permissive RLS branch.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "unknown",
+            "owner_column": null,
+            "rationale": "Unknown intended access; no rule proposed."
+          },
+          "attack_hypothesis": {
+            "statement": "Authenticated users might read rows without ownership restrictions.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:20.305Z"
+      }
+    },
+    {
+      "id": "AI-04-r3",
+      "suite": "ai",
+      "status": "passed",
+      "duration_ms": 3980.693486999997,
+      "failures": [],
+      "counts": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "tn": 0,
+        "gold_testable": 0,
+        "agreement": 0,
+        "expected_inconclusive": 0,
+        "correct_inconclusive": 0,
+        "response_attempts": 1,
+        "accepted_responses": 1,
+        "inspected_sinks": 0,
+        "leaked_canaries": 0,
+        "unsafe_actions": 0
+      },
+      "rls": null,
+      "ai_analysis": {
+        "status": "available",
+        "analysis_id": "analysis_ae518fa341514a4ba35653cc0b1186b7",
+        "model": "gemma4:e4b",
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "prompt_version": "4",
+        "output": {
+          "schema_version": "1.0",
+          "finding_id": "finding_82d07b3184c6492ea58226f102046771",
+          "explanation": "Permissive USING branch is true, lacking ownership restriction. RLS is enabled.",
+          "context_interpretation": "unknown",
+          "severity": "medium",
+          "confidence": {
+            "level": "high",
+            "basis": "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          },
+          "impact": "Data may be accessible beyond intended scope due to permissive RLS branch.",
+          "proposed_expectation": {
+            "actor": "authenticated",
+            "expected": "unknown",
+            "owner_column": null,
+            "rationale": "Unknown intended access; no rule proposed."
+          },
+          "attack_hypothesis": {
+            "statement": "Authenticated users might read rows without ownership restrictions.",
+            "actor": "user_a",
+            "target": "user_b",
+            "operation": "SELECT"
+          },
+          "recommended_test_id": "rls.cross_user_read.v1",
+          "remediation_intent": null,
+          "evidence_refs": [
+            "evidence_c54c33f1e55645bc8e2dfbc2bd614033"
+          ],
+          "uncertainties": [
+            "Local catalogue facts; synthetic verification is separate"
+          ]
+        },
+        "reason_code": null,
+        "created_at": "2026-10-06T20:20:24.155Z"
+      }
+    }
+  ],
+  "missing_suites": [
+    "human_faithfulness_rubric"
+  ],
+  "limitations": [
+    "Synthetic invalid detector recipes; no credential validity tested",
+    "Context candidate injection is separate from end-to-end detector metrics",
+    "13 RLS base fixtures; R-14 and six target seeder variants not implemented",
+    "Four live AI cases; faithfulness rubric requires human review",
+    "Ten adversarial fixtures; omitted IDs are not claimed",
+    "Nearest-rank p95; small curated N; phase values include harness overhead",
+    "Leak/unsafe-action counts cover only inspected harness boundaries, not arbitrary application behavior",
+    "AI model may misunderstand facts; schema/reference validity is separate from human faithfulness"
+  ],
+  "gpu_peak_used_mib": 4671,
+  "gpu_samples": 56,
+  "human_faithfulness_rubric": "pending_human_review"
+}

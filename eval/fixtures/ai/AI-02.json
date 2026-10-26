@@ -1,0 +1,11 @@
+{
+  "id": "AI-02",
+  "kind": "inferred",
+  "repetitions": 3,
+  "rubric": [
+    "Every factual claim traces to supplied facts",
+    "Intent source qualified; proposals inactive",
+    "No fabricated observation",
+    "No production or credential-validity overclaim"
+  ]
+}

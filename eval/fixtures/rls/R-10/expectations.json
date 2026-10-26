@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.0",
+  "expectations": [
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "authenticated",
+      "operation": "SELECT",
+      "expected": "own_rows_only",
+      "owner_column": "user_id",
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "authenticated",
+      "operation": "INSERT",
+      "expected": "own_rows_only",
+      "owner_column": "user_id",
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "authenticated",
+      "operation": "UPDATE",
+      "expected": "own_rows_only",
+      "owner_column": "user_id",
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "authenticated",
+      "operation": "DELETE",
+      "expected": "own_rows_only",
+      "owner_column": "user_id",
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "anon",
+      "operation": "SELECT",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "anon",
+      "operation": "INSERT",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "anon",
+      "operation": "UPDATE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "profiles"
+      },
+      "actor": "anon",
+      "operation": "DELETE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "authenticated",
+      "operation": "SELECT",
+      "expected": "all_rows",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": true,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "authenticated",
+      "operation": "INSERT",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "authenticated",
+      "operation": "UPDATE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "authenticated",
+      "operation": "DELETE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "anon",
+      "operation": "SELECT",
+      "expected": "all_rows",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": true,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "anon",
+      "operation": "INSERT",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "anon",
+      "operation": "UPDATE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    },
+    {
+      "resource": {
+        "schema": "public",
+        "table": "posts"
+      },
+      "actor": "anon",
+      "operation": "DELETE",
+      "expected": "deny_all",
+      "owner_column": null,
+      "team_binding": null,
+      "intentionally_public": false,
+      "rationale": "Demo declared intent"
+    }
+  ]
+}

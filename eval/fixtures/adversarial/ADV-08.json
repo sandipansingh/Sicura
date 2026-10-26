@@ -1,0 +1,6 @@
+{
+  "id": "ADV-08",
+  "input_class": "edge",
+  "purpose": "oversized file rejected before expensive processing",
+  "expected": "reject_or_inert_no_unsafe_action"
+}

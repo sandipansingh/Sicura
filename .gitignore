@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.local/
+node_modules/
+.next/
+*.tsbuildinfo
+playwright-report/
+test-results/
+*.gguf
+*.safetensors
+*.pt
+*.pth
